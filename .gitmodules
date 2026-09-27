@@ -1,0 +1,9 @@
+[submodule "basketball_reference_scraper"]
+	path = basketball_reference_scraper
+	url = https://github.com/vishaalagartha/basketball_reference_scraper.git
+[submodule "basketball_reference_web_scraper"]
+	path = basketball_reference_web_scraper
+	url = https://github.com/jaebradley/basketball_reference_web_scraper.git
+[submodule "nba-player-points-prediction"]
+	path = nba-player-points-prediction
+	url = https://github.com/Jayplect/nba-player-points-prediction.git
