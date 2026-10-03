@@ -1,0 +1,26 @@
+[
+  {
+    "player_name": "Stephen Curry",
+    "team_name": "Golden State Warriors",
+    "date": "2025-03-12",
+    "minutes": 35.0,
+    "points": 27.0,
+    "rebounds": 5.0,
+    "assists": 10.0,
+    "steals": 2.0,
+    "blocks": 1.0,
+    "source_system": "live"
+  },
+  {
+    "player_name": "Nikola Jokic",
+    "team_name": "Denver Nuggets",
+    "date": "2025-03-12",
+    "minutes": 37.0,
+    "points": 33.0,
+    "rebounds": 14.0,
+    "assists": 11.0,
+    "steals": 1.0,
+    "blocks": 1.0,
+    "source_system": "live"
+  }
+]

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NBA Analytics Workspace Guide</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+    }
+    h1, h2, h3 { color: #f8fafc; }
+    .hero {
+      background: linear-gradient(135deg, #1d4ed8, #0f172a);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .card {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      padding: 18px;
+    }
+    a { color: #93c5fd; }
+    .action-link {
+      display: inline-block;
+      background: #2563eb;
+      color: white;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin: 10px 0 12px;
+      font-weight: bold;
+    }
+    code {
+      background: #0b1220;
+      color: #bfdbfe;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.95em;
+    }
+    ul { line-height: 1.6; }
+    .section { margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <h1>NBA Analytics Workspace Guide</h1>
+      <p>This workspace combines live NBA data, historical backfill, normalized warehouse tables, and model-ready features.</p>
+    </div>
+
+    <div class="section">
+      <h2>Quick start</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>1. Bootstrap the warehouse</h3>
+          <p><a href="bootstrap.cmd" class="action-link">Run bootstrap</a></p>
+          <code>py -3 -m scripts.etl.bootstrap</code>
+        </div>
+        <div class="card">
+          <h3>2. Run the demo sample pipeline</h3>
+          <p><a href="demo_pipeline.cmd" class="action-link">Run demo pipeline</a></p>
+          <code>py -3 -m scripts.etl.run_demo_pipeline</code>
+        </div>
+        <div class="card">
+          <h3>3. Open the project docs</h3>
+          <p><a href="README.md">README.md</a></p>
+          <p><a href="IMPLEMENTATION_PLAN.md">IMPLEMENTATION_PLAN.md</a></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Workspace map</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Project source</h3>
+          <ul>
+            <li><a href="README.md">README.md</a></li>
+            <li><a href="IMPLEMENTATION_PLAN.md">IMPLEMENTATION_PLAN.md</a></li>
+            <li><a href="workspace_guide.html">workspace_guide.html</a></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>ETL and warehouse</h3>
+          <ul>
+            <li><a href="scripts/etl/warehouse.py">scripts/etl/warehouse.py</a></li>
+            <li><a href="scripts/etl/canonical_mapping.py">scripts/etl/canonical_mapping.py</a></li>
+            <li><a href="scripts/etl/run_demo_pipeline.py">scripts/etl/run_demo_pipeline.py</a></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Data inputs</h3>
+          <ul>
+            <li><a href="data/raw/historical/sample_player_game.csv">data/raw/historical/sample_player_game.csv</a></li>
+            <li><a href="data/raw/nba_stats/sample_live_players.json">data/raw/nba_stats/sample_live_players.json</a></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>External data sources</h3>
+          <ul>
+            <li><a href="dgrubis.github.io/">dgrubis.github.io</a></li>
+            <li><a href="basketball/">basketball</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>What the pipeline does</h2>
+      <ul>
+        <li>Bootstraps the SQLite warehouse schema</li>
+        <li>Creates canonical team, player, and date mappings</li>
+        <li>Loads historical sample data into fact tables</li>
+        <li>Loads live sample feed data into the same fact tables</li>
+        <li>Creates a foundation for rolling feature generation and modeling</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

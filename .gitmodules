@@ -7,3 +7,9 @@
 [submodule "nba-player-points-prediction"]
 	path = nba-player-points-prediction
 	url = https://github.com/Jayplect/nba-player-points-prediction.git
+[submodule "dgrubis.github.io"]
+	path = dgrubis.github.io
+	url = https://github.com/dgrubis/dgrubis.github.io.git
+[submodule "basketball"]
+	path = basketball
+	url = https://github.com/octonion/basketball.git

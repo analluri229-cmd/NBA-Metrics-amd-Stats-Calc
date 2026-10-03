@@ -1,0 +1,21 @@
+# Offline pipeline (bootstrap, ingest, features, export) needs only pandas.
+pandas>=2.2
+pytest>=8
+
+# Analysis and modeling (notebooks, scripts/model). Install with --only-binary=:all:
+# on Windows so pip never tries to compile a package from source.
+scipy>=1.14
+statsmodels>=0.14
+scikit-learn>=1.5
+lightgbm>=4.5
+matplotlib>=3.9
+pyarrow>=17
+nbconvert>=7      # local_analysis/run_profile.py HTML reports
+
+# Network extractors (pull step) and fetch_team_stats.py
+requests>=2.31
+lxml>=5
+openpyxl>=3.1
+nba_api>=1.11
+# Basketball-Reference scrapers are installed from the local submodules:
+#   pip install -e basketball_reference_web_scraper -e basketball_reference_scraper

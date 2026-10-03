@@ -13,6 +13,30 @@ venv/
 ~$*.xlsx
 ~$*.xls
 
+# Test cache
+.pytest_cache/
+
+# Generated data (rebuild with: python -m scripts.etl.orchestrator run)
+db/sqlite/*.db
+data/clean/
+
+# Raw per-season downloads (re-fetch with: python -m scripts.etl.orchestrator pull ...)
+# The small sample files, data/reference/ overrides and test fixtures stay tracked.
+data/raw/basketball_reference/
+data/raw/nba_stats/[0-9][0-9][0-9][0-9]/
+# DARKO ratings belong to their authors: personal use only, never pushed.
+data/raw/darko/
+
+# Personal analysis scripts and notebooks, kept out of the public repo
+/local_analysis/
+
+# Reference clones (the pipeline uses the pip packages; see requirements.txt)
+third_party/nba_api/
+third_party/flexviz/
+
 # OS / editor noise
 Thumbs.db
 .DS_Store
+
+# Personal session notes
+/recent *claude summary.txt
