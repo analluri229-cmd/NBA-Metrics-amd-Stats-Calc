@@ -39,7 +39,7 @@ Playoffs: `basketball_reference` has 2017-2026; `nba_stats` only 2026 unless old
 
 ## Running it
 
-- Interpreter: the one in `.vscode/settings.json` (`C:/Users/themi/.venv`). It has pandas, matplotlib and the rest of `requirements.txt`.
+- Interpreter: the one in `.vscode/settings.json` (`.venv` in your user profile folder). It has pandas, matplotlib and the rest of `requirements.txt`.
 - In VS Code: open the file, then Run Python File. Arguments go in the terminal command.
 - Notebooks: `local_analysis/player_profile.ipynb` is a worked example that loads its data the same way.
 

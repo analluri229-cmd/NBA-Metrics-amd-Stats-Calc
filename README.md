@@ -227,3 +227,7 @@ The eventual output should be a repeatable NBA analytics workflow that combines:
 - a versioned warehouse for historical and live data
 - Tableau-friendly semantic data model(s)
 - clear visual storytelling for coaching and team decision-makers
+
+## License
+
+The code is released under the [MIT License](LICENSE). It does not cover third-party data: NBA, Basketball-Reference and DARKO data belong to their owners (see [CREDITS.md](CREDITS.md)).
