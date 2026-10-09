@@ -3,8 +3,8 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-from scripts.etl.canonical.schema import DERIVED_TABLES, TABLES, schema_sql
-from scripts.etl.paths import DB_PATH, PROJECT_ROOT  # noqa: F401  (re-exported for older imports)
+from pipeline.etl.canonical.schema import DERIVED_TABLES, TABLES, schema_sql
+from pipeline.etl.paths import DB_PATH, PROJECT_ROOT  # noqa: F401  (re-exported for older imports)
 
 SCHEMA_SQL = schema_sql()
 

@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-from scripts.etl.canonical.contract import AdapterResult, RawFile
-from scripts.etl.canonical.loader import ingest_file
-from scripts.etl.canonical.schema import FACT_TABLES
-from scripts.etl.sources.registry import ADAPTERS, ingest
+from pipeline.etl.canonical.contract import AdapterResult, RawFile
+from pipeline.etl.canonical.loader import ingest_file
+from pipeline.etl.canonical.schema import FACT_TABLES
+from pipeline.etl.sources.registry import ADAPTERS, ingest
 
 
 def _count(conn, sql, *params):
@@ -93,7 +93,7 @@ def test_remap_only_removes_rows_of_the_reloaded_file(conn, raw_root):
 
 
 def test_dim_date_season_follows_the_sources(conn, raw_root):
-    from scripts.etl.canonical.loader import refresh_dim_date_seasons
+    from pipeline.etl.canonical.loader import refresh_dim_date_seasons
 
     ingest(conn, ["nba_stats"], raw_root=raw_root)
     date_id = conn.execute("SELECT MIN(date_id) FROM fact_team_game").fetchone()[0]

@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import pytest
 
-from scripts.etl.orchestrator import parse_seasons
-from scripts.etl.sources.nba_stats import extract as nba
-from scripts.etl.sources.pulling import NotAvailable, with_retries
+from pipeline.etl.orchestrator import parse_seasons
+from pipeline.etl.sources.nba_stats import extract as nba
+from pipeline.etl.sources.pulling import NotAvailable, with_retries
 
 
 def test_parse_seasons_accepts_ranges():

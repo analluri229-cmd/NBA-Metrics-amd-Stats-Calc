@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import csv
 
-from scripts.etl.orchestrator import main, run_pipeline
+from pipeline.etl.orchestrator import main, run_pipeline
 
 
 def test_run_pipeline_returns_summary(tmp_path, raw_root) -> None:
@@ -36,7 +36,7 @@ def test_run_pipeline_exports_notebook_files(tmp_path, raw_root) -> None:
 
 
 def test_cli_ingest_reports_success(tmp_path, raw_root, monkeypatch, capsys) -> None:
-    monkeypatch.setattr("scripts.etl.orchestrator.RAW_DIR", raw_root)
+    monkeypatch.setattr("pipeline.etl.orchestrator.RAW_DIR", raw_root)
     db = tmp_path / "cli.db"
     assert main(["--db", str(db), "bootstrap"]) == 0
     assert main(["--db", str(db), "ingest", "--source", "bbref"]) == 0
@@ -44,7 +44,7 @@ def test_cli_ingest_reports_success(tmp_path, raw_root, monkeypatch, capsys) -> 
 
 
 def test_export_defaults_to_latest_season(tmp_path, raw_root) -> None:
-    from scripts.etl.export_csvs import export_tables
+    from pipeline.etl.export_csvs import export_tables
 
     db = tmp_path / "warehouse.db"
     run_pipeline(db, raw_root=raw_root, export_dir=tmp_path / "clean")

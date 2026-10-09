@@ -3,7 +3,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-from scripts.etl.paths import DB_PATH
+from pipeline.etl.paths import DB_PATH
 
 FEATURE_SQL = """
 CREATE TABLE IF NOT EXISTS feature_player_daily (

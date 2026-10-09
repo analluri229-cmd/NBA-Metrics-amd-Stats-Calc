@@ -35,8 +35,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from scripts.etl.canonical.schema import TABLES
-from scripts.etl.paths import CLEAN_DIR, DB_PATH
+from pipeline.etl.canonical.schema import TABLES
+from pipeline.etl.paths import CLEAN_DIR, DB_PATH
 
 # Kept in the warehouse only; the *_season/ wide files hold the same values.
 WAREHOUSE_ONLY = {"fact_player_season_stat", "fact_team_season_stat", "fact_lineup_season_stat",

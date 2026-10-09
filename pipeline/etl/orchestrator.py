@@ -1,16 +1,16 @@
 """Pipeline entry point.
 
-    python -m scripts.etl.orchestrator bootstrap [--reset]
-    python -m scripts.etl.orchestrator pull --source nba_stats --season 2026 [--season-type playoffs|both]
-    python -m scripts.etl.orchestrator pull --source nba_stats --season 2017-2025 --skip-existing   # backfill
-    python -m scripts.etl.orchestrator pull --source bbref --season 2026 [--tables ...] [--with-web-scraper]
-    python -m scripts.etl.orchestrator pull --source bbref --date 2025-11-01 [--end 2025-11-07]
-    python -m scripts.etl.orchestrator pull --source darko --season 2017-2026 [--every 1]   # after nba_stats
-    python -m scripts.etl.orchestrator pull --source darko --date 2026-01-15 [--end 2026-01-31]
-    python -m scripts.etl.orchestrator ingest [--source NAME ...] [--season N] [--force]
-    python -m scripts.etl.orchestrator features
-    python -m scripts.etl.orchestrator export [--season N | --all-seasons]   # default: latest season
-    python -m scripts.etl.orchestrator run [--reset]        # bootstrap -> ingest -> features -> export
+    python -m pipeline.etl.orchestrator bootstrap [--reset]
+    python -m pipeline.etl.orchestrator pull --source nba_stats --season 2026 [--season-type playoffs|both]
+    python -m pipeline.etl.orchestrator pull --source nba_stats --season 2017-2025 --skip-existing   # backfill
+    python -m pipeline.etl.orchestrator pull --source bbref --season 2026 [--tables ...] [--with-web-scraper]
+    python -m pipeline.etl.orchestrator pull --source bbref --date 2025-11-01 [--end 2025-11-07]
+    python -m pipeline.etl.orchestrator pull --source darko --season 2017-2026 [--every 1]   # after nba_stats
+    python -m pipeline.etl.orchestrator pull --source darko --date 2026-01-15 [--end 2026-01-31]
+    python -m pipeline.etl.orchestrator ingest [--source NAME ...] [--season N] [--force]
+    python -m pipeline.etl.orchestrator features
+    python -m pipeline.etl.orchestrator export [--season N | --all-seasons]   # default: latest season
+    python -m pipeline.etl.orchestrator run [--reset]        # bootstrap -> ingest -> features -> export
 
 ``pull`` is the only step that touches the network; everything else works offline
 from the raw files in data/raw/.
@@ -22,15 +22,15 @@ import json
 from datetime import date
 from pathlib import Path
 
-from scripts.etl.bootstrap import bootstrap
-from scripts.etl.canonical.loader import refresh_dim_date_seasons
-from scripts.etl.canonical.stat_catalog import refresh_stat_catalog
-from scripts.etl.export_csvs import export_tables
-from scripts.etl.generate_features import generate_features
-from scripts.etl.paths import CLEAN_DIR, DB_PATH, PROJECT_ROOT, RAW_DIR  # noqa: F401
-from scripts.etl.sources.pulling import PullReport
-from scripts.etl.sources.registry import ADAPTERS, SOURCE_GROUPS, ingest, rows_by_source
-from scripts.etl.warehouse import ensure_schema
+from pipeline.etl.bootstrap import bootstrap
+from pipeline.etl.canonical.loader import refresh_dim_date_seasons
+from pipeline.etl.canonical.stat_catalog import refresh_stat_catalog
+from pipeline.etl.export_csvs import export_tables
+from pipeline.etl.generate_features import generate_features
+from pipeline.etl.paths import CLEAN_DIR, DB_PATH, PROJECT_ROOT, RAW_DIR  # noqa: F401
+from pipeline.etl.sources.pulling import PullReport
+from pipeline.etl.sources.registry import ADAPTERS, SOURCE_GROUPS, ingest, rows_by_source
+from pipeline.etl.warehouse import ensure_schema
 
 HISTORICAL_SOURCES = ("bbref_team_season", "bbref_player_season", "bbref_web")
 
@@ -95,7 +95,7 @@ def _pull(args: argparse.Namespace) -> PullReport:
     report = PullReport()
     seasons = parse_seasons(args.season)
     if args.source == "nba_stats":
-        from scripts.etl.sources.nba_stats.extract import pull_season
+        from pipeline.etl.sources.nba_stats.extract import pull_season
 
         season_type = "both" if args.playoffs else args.season_type
         season_types = ["regular", "playoffs"] if season_type == "both" else [season_type]
@@ -104,7 +104,7 @@ def _pull(args: argparse.Namespace) -> PullReport:
             report.merge(pull_season(season, tables=args.tables, season_types=season_types,
                                      skip_existing=args.skip_existing))
     elif args.source in ("bbref", "basketball_reference"):
-        from scripts.etl.sources.basketball_reference import extract
+        from pipeline.etl.sources.basketball_reference import extract
 
         if args.date:
             extract.pull_box_scores(date.fromisoformat(args.date), date.fromisoformat(args.end or args.date))
@@ -114,7 +114,7 @@ def _pull(args: argparse.Namespace) -> PullReport:
             if args.with_web_scraper:
                 extract.pull_season(season)
     elif args.source == "darko":
-        from scripts.etl.sources.darko import extract
+        from pipeline.etl.sources.darko import extract
 
         if args.date:
             start, end = date.fromisoformat(args.date), date.fromisoformat(args.end or args.date)

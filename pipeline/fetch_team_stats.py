@@ -29,7 +29,7 @@ import pandas as pd
 import requests
 from openpyxl.utils import get_column_letter
 
-WORKSPACE_ROOT = Path(__file__).resolve().parent
+WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT_DIR = WORKSPACE_ROOT / "data" / "raw"
 DEFAULT_EXCEL_DIR = WORKSPACE_ROOT / "data" / "tableau"
 REQUEST_DELAY_SECONDS = 4  # stays under Basketball-Reference's ~20 requests/minute limit

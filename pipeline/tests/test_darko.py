@@ -6,11 +6,11 @@ from __future__ import annotations
 
 import json
 
-from scripts.etl.canonical.resolver import IdResolver
-from scripts.etl.sources.darko.adapter import DarkoAdapter
-from scripts.etl.sources.darko.extract import game_dates, snapshot_dates
-from scripts.etl.sources.darko.page_data import unflatten
-from scripts.etl.sources.registry import ingest
+from pipeline.etl.canonical.resolver import IdResolver
+from pipeline.etl.sources.darko.adapter import DarkoAdapter
+from pipeline.etl.sources.darko.extract import game_dates, snapshot_dates
+from pipeline.etl.sources.darko.page_data import unflatten
+from pipeline.etl.sources.registry import ingest
 
 
 def _parse(raw_root, resolver=None):

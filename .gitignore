@@ -17,7 +17,7 @@ venv/
 .pytest_cache/
 
 # Generated data (rebuild with: python -m scripts.etl.orchestrator run)
-db/sqlite/*.db
+data/warehouse/*.db
 data/clean/
 
 # Raw per-season downloads (re-fetch with: python -m scripts.etl.orchestrator pull ...)
@@ -31,12 +31,10 @@ data/raw/darko/
 /local_analysis/
 
 # Reference clones (the pipeline uses the pip packages; see requirements.txt)
-third_party/nba_api/
-third_party/flexviz/
+vendor/nba_api/
+vendor/flexviz/
 
 # OS / editor noise
 Thumbs.db
 .DS_Store
 
-# Personal session notes
-/recent *claude summary.txt

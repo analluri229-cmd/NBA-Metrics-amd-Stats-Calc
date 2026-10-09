@@ -1,12 +1,12 @@
 """Adapters parse fixture raw files (trimmed real downloads) into canonical rows, without a database."""
 from __future__ import annotations
 
-from scripts.etl.canonical.resolver import IdResolver
-from scripts.etl.sources.basketball_reference.player_season import PlayerSeasonAdapter
-from scripts.etl.sources.basketball_reference.team_season import TeamSeasonAdapter
-from scripts.etl.sources.basketball_reference.web_scraper import WebScraperAdapter
-from scripts.etl.sources.legacy.sample import LegacySampleAdapter
-from scripts.etl.sources.nba_stats.adapter import NbaStatsAdapter
+from pipeline.etl.canonical.resolver import IdResolver
+from pipeline.etl.sources.basketball_reference.player_season import PlayerSeasonAdapter
+from pipeline.etl.sources.basketball_reference.team_season import TeamSeasonAdapter
+from pipeline.etl.sources.basketball_reference.web_scraper import WebScraperAdapter
+from pipeline.etl.sources.legacy.sample import LegacySampleAdapter
+from pipeline.etl.sources.nba_stats.adapter import NbaStatsAdapter
 
 
 def _parse(adapter, raw_root, data_type, resolver=None):
@@ -163,7 +163,7 @@ def test_lineups_map_members_through_the_crosswalk(raw_root):
 
 
 def test_split_defense_season_is_recombined():
-    from scripts.etl.sources.nba_stats.adapter import combine_defense_stints
+    from pipeline.etl.sources.nba_stats.adapter import combine_defense_stints
 
     # Mikal Bridges 2022-23, listed twice (F and G-F) in the closest-defender table.
     stints = [{"gp": 56, "g": 56, "freq": 1.0, "d_fgm": 349, "d_fga": 730, "d_fg_pct": 0.478, "normal_fg_pct": 0.474},

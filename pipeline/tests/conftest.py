@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from scripts.etl.bootstrap import bootstrap
-from scripts.etl.canonical import resolver
-from scripts.etl.warehouse import connect
+from pipeline.etl.bootstrap import bootstrap
+from pipeline.etl.canonical import resolver
+from pipeline.etl.warehouse import connect
 
 FIXTURE_RAW = Path(__file__).parent / "fixtures" / "raw"
 

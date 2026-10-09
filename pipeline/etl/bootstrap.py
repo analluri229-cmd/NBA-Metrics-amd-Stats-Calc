@@ -3,9 +3,9 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from scripts.etl.canonical_mapping import apply_canonical_mapping
-from scripts.etl.feature_store import initialize_feature_store
-from scripts.etl.warehouse import DB_PATH
+from pipeline.etl.canonical_mapping import apply_canonical_mapping
+from pipeline.etl.feature_store import initialize_feature_store
+from pipeline.etl.warehouse import DB_PATH
 
 
 def bootstrap(db_path: Path | str = DB_PATH, reset: bool = False) -> dict[str, str]:

@@ -1,10 +1,10 @@
 """Shot chart, shot context (defender distance x shot clock) and on/off tables from stats.nba.com."""
 from __future__ import annotations
 
-from scripts.etl.canonical.resolver import IdResolver
-from scripts.etl.sources.nba_stats.adapter import NbaStatsAdapter, stat_table_for
-from scripts.etl.sources.nba_stats.extract import ALL_TABLES, TEAM_REQUEST_TABLES, team_raw_path
-from scripts.etl.sources.registry import ingest
+from pipeline.etl.canonical.resolver import IdResolver
+from pipeline.etl.sources.nba_stats.adapter import NbaStatsAdapter, stat_table_for
+from pipeline.etl.sources.nba_stats.extract import ALL_TABLES, TEAM_REQUEST_TABLES, team_raw_path
+from pipeline.etl.sources.registry import ingest
 
 JOKIC = [("jokicni01", "Nikola Jokić")]
 

@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import pytest
 
-from scripts.etl.canonical.dates import eastern_game_date, season_from_date, season_from_label, season_label
-from scripts.etl.canonical.players import normalize_name
-from scripts.etl.canonical.resolver import IdResolver
-from scripts.etl.canonical.stat_catalog import describe
-from scripts.etl.canonical.teams import FRANCHISES, resolve_team_id
+from pipeline.etl.canonical.dates import eastern_game_date, season_from_date, season_from_label, season_label
+from pipeline.etl.canonical.players import normalize_name
+from pipeline.etl.canonical.resolver import IdResolver
+from pipeline.etl.canonical.stat_catalog import describe
+from pipeline.etl.canonical.teams import FRANCHISES, resolve_team_id
 
 
 def test_thirty_franchises_resolve_by_id_and_name():

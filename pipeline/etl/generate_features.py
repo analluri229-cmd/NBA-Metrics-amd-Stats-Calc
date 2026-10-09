@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from scripts.etl.feature_store import initialize_feature_store
-from scripts.etl.paths import DB_PATH
+from pipeline.etl.feature_store import initialize_feature_store
+from pipeline.etl.paths import DB_PATH
 
 FEATURE_TABLE = "feature_player_daily"
 FEATURE_COLUMNS = [

@@ -15,8 +15,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
-WDC_DIR = ROOT / "dgrubis.github.io"
+ROOT = Path(__file__).resolve().parents[1]
+WDC_DIR = ROOT / "vendor" / "dgrubis.github.io"
 
 
 def ensure_prereqs() -> None:
@@ -28,7 +28,7 @@ def ensure_prereqs() -> None:
 
     if not WDC_DIR.exists():
         raise RuntimeError(
-            "dgrubis.github.io is missing. Run: git submodule update --init --recursive"
+            "vendor/dgrubis.github.io is missing. Run: git submodule update --init --recursive"
         )
 
     if not (WDC_DIR / "package.json").exists():
