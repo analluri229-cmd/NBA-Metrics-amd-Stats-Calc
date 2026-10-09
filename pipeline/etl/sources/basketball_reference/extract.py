@@ -4,7 +4,7 @@ Basketball-Reference allows roughly 20 requests per minute, so every request is
 followed by ``settings.BBREF_DELAY_SECONDS``. A full season of player stat pages is 8
 requests; ``pull_season`` adds 3 more via ``basketball_reference_web_scraper``.
 
-``fetch_team_stats.py`` (team/opponent tables) is still run on its own.
+Team/opponent tables are pulled by ``team_extract.py`` (``pull --source bbref_team``).
 """
 from __future__ import annotations
 

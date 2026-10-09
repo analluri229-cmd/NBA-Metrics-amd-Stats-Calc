@@ -1,4 +1,4 @@
-"""Adapter for the team/opponent season tables written by ``fetch_team_stats.py``.
+"""Adapter for the team/opponent season tables written by ``pull --source bbref_team`` (``team_extract.py``).
 
 Raw files: data/raw/{team,opponent}_{totals,per_100_poss}_<season>.csv
 """

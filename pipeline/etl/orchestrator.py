@@ -5,6 +5,7 @@
     python -m pipeline.etl.orchestrator pull --source nba_stats --season 2017-2025 --skip-existing   # backfill
     python -m pipeline.etl.orchestrator pull --source bbref --season 2026 [--tables ...] [--with-web-scraper]
     python -m pipeline.etl.orchestrator pull --source bbref --date 2025-11-01 [--end 2025-11-07]
+    python -m pipeline.etl.orchestrator pull --source bbref_team --season 2024-2026 [--skip-existing]
     python -m pipeline.etl.orchestrator pull --source darko --season 2017-2026 [--every 1]   # after nba_stats
     python -m pipeline.etl.orchestrator pull --source darko --date 2026-01-15 [--end 2026-01-31]
     python -m pipeline.etl.orchestrator ingest [--source NAME ...] [--season N] [--force]
@@ -136,6 +137,10 @@ def _pull(args: argparse.Namespace) -> PullReport:
             report.merge(extract.pull_player_tables(season, tables=args.tables, skip_existing=args.skip_existing))
             if args.with_web_scraper:
                 extract.pull_season(season)
+    elif args.source == "bbref_team":
+        from pipeline.etl.sources.basketball_reference import team_extract
+
+        report.merge(team_extract.pull_seasons(seasons, skip_existing=args.skip_existing))
     elif args.source == "darko":
         from pipeline.etl.sources.darko import extract
 
@@ -149,7 +154,7 @@ def _pull(args: argparse.Namespace) -> PullReport:
             print(f"DARKO {season}:")
             report.merge(extract.pull_season(season, every_days=args.every, skip_existing=args.skip_existing))
     else:
-        raise SystemExit(f"pull supports --source nba_stats, bbref or darko, not {args.source!r}")
+        raise SystemExit(f"pull supports --source nba_stats, bbref, bbref_team or darko, not {args.source!r}")
     return report
 
 
@@ -163,7 +168,7 @@ def build_parser() -> argparse.ArgumentParser:
     boot.add_argument("--reset", action="store_true", help="Delete the existing warehouse first.")
 
     pull = commands.add_parser("pull", help="Download raw source files (network).")
-    pull.add_argument("--source", required=True, choices=["nba_stats", "bbref", "basketball_reference", "darko"])
+    pull.add_argument("--source", required=True, choices=["nba_stats", "bbref", "basketball_reference", "bbref_team", "darko"])
     pull.add_argument("--season", nargs="*", default=[],
                       help="Season end year(s) or ranges: 2026 = 2025-26, 2017-2025 = nine seasons.")
     pull.add_argument("--tables", nargs="*", help="Only these tables (default: all for the source).")

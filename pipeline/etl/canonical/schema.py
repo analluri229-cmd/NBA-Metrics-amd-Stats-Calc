@@ -149,7 +149,7 @@ TABLES: dict[str, Table] = {
             ("(team_id) REFERENCES dim_team(team_id)",),
         ),
         Table(
-            # Basketball-Reference team/opponent x totals/per-100 tables (fetch_team_stats.py).
+            # Basketball-Reference team/opponent x totals/per-100 tables (pull --source bbref_team).
             "fact_team_season_box",
             (("team_season_box_id", "TEXT NOT NULL"), ("team_id", "TEXT NOT NULL"), ("season", "INTEGER"),
              ("perspective", "TEXT"), ("stat_basis", "TEXT"),

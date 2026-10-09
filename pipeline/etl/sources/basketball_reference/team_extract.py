@@ -1,39 +1,34 @@
 """Download team and opponent stat tables from a Basketball-Reference season page.
 
-Pulls these tables from https://www.basketball-reference.com/leagues/NBA_<year>.html:
+    python -m pipeline.etl.orchestrator pull --source bbref_team --season 2024-2026
 
-    per_poss-team      Team per 100 possessions
-    per_poss-opponent  Opponent per 100 possessions (what each team allowed)
-    totals-team        Team season totals
-    totals-opponent    Opponent season totals (what each team allowed)
+One request per season (https://www.basketball-reference.com/leagues/NBA_<year>.html) yields:
 
-Each table is saved as a CSV in data/raw/, and all four are written to one
-Excel workbook in data/tableau/ (one sheet per table, plus an "All_Stats" sheet
-that stacks them for Tableau).
+    per_poss-team      Team per 100 possessions             -> team_per_100_poss_<season>.csv
+    per_poss-opponent  Opponent per 100 possessions         -> opponent_per_100_poss_<season>.csv
+    totals-team        Team season totals                   -> team_totals_<season>.csv
+    totals-opponent    Opponent season totals               -> opponent_totals_<season>.csv
 
-Usage:
-    python fetch_team_stats.py                        # 2025-26 season
-    python fetch_team_stats.py --season 2025          # 2024-25 season
-    python fetch_team_stats.py --season 2024 2025 2026  # several seasons
-    python fetch_team_stats.py --no-excel             # CSVs only
+The CSVs go to data/raw/ (read by the bbref_team_season adapter). With settings.TEAM_STATS_EXCEL
+the four tables also go to one Tableau workbook, data/tableau/team_stats_<season>.xlsx (one sheet
+per table plus an "All_Stats" sheet that stacks them).
 """
 from __future__ import annotations
 
-import argparse
 import io
 import re
 import time
 from pathlib import Path
+from typing import Callable
 
 import pandas as pd
 import requests
 from openpyxl.utils import get_column_letter
 
-WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUT_DIR = WORKSPACE_ROOT / "data" / "raw"
-DEFAULT_EXCEL_DIR = WORKSPACE_ROOT / "data" / "tableau"
-REQUEST_DELAY_SECONDS = 4  # stays under Basketball-Reference's ~20 requests/minute limit
-DEFAULT_SEASON = 2026  # Basketball-Reference labels seasons by end year: 2026 = 2025-26
+from pipeline import settings
+
+from ..pulling import PullReport
+from .extract import RateLimited
 
 SEASON_URL = "https://www.basketball-reference.com/leagues/NBA_{season}.html"
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
@@ -58,8 +53,8 @@ SHEETS = {
 def fetch_season_page(season: int) -> str:
     response = requests.get(SEASON_URL.format(season=season), headers=HEADERS, timeout=30)
     if response.status_code == 429:
-        raise RuntimeError(
-            "Basketball-Reference rate limit hit (HTTP 429). Wait a while before retrying; "
+        raise RateLimited(
+            "Basketball-Reference rate limit hit (HTTP 429). Wait about an hour before retrying; "
             "the site allows roughly 20 requests per minute."
         )
     response.raise_for_status()
@@ -89,9 +84,9 @@ def parse_table(html: str, table_id: str, season: int) -> pd.DataFrame:
     return df.reset_index(drop=True)
 
 
-def fetch_team_stats(season: int = DEFAULT_SEASON) -> dict[str, pd.DataFrame]:
+def fetch_team_stats(season: int, fetch_page: Callable[[int], str] | None = None) -> dict[str, pd.DataFrame]:
     """Return {output_stem: DataFrame} for every table in TABLES."""
-    html = fetch_season_page(season)
+    html = re.sub(r"<!--|-->", "", (fetch_page or fetch_season_page)(season))
     results = {}
     for table_id, stem in TABLES.items():
         try:
@@ -130,36 +125,48 @@ def write_workbook(results: dict[str, pd.DataFrame], path: Path) -> None:
                 ws.column_dimensions[get_column_letter(i)].width = min(width, 30)
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--season", type=int, nargs="+", default=[DEFAULT_SEASON],
-                        help="One or more season end years (2026 = 2025-26). Default: %(default)s")
-    parser.add_argument("--out", type=Path, default=DEFAULT_OUT_DIR,
-                        help="CSV output folder. Default: data/raw")
-    parser.add_argument("--excel-out", type=Path, default=DEFAULT_EXCEL_DIR,
-                        help="Excel workbook folder. Default: data/tableau")
-    parser.add_argument("--no-excel", action="store_true", help="Skip the Excel workbook")
-    args = parser.parse_args()
+def pull_team_tables(season: int, out_root: Path | None = None, excel_dir: Path | None = None,
+                     excel: bool | None = None, skip_existing: bool = False,
+                     fetch_page: Callable[[int], str] | None = None) -> PullReport:
+    """Save the four team/opponent tables for ``season`` as CSVs (and the workbook when ``excel``).
 
-    args.out.mkdir(parents=True, exist_ok=True)
-    args.excel_out.mkdir(parents=True, exist_ok=True)
+    Defaults: out_root = settings.RAW_DIR, excel_dir = settings.TABLEAU_DIR, excel = settings.TEAM_STATS_EXCEL.
+    With ``skip_existing`` and all four CSVs on disk, the page is not fetched.
+    """
+    out_root = Path(out_root or settings.RAW_DIR)
+    excel_dir = Path(excel_dir or settings.TABLEAU_DIR)
+    excel = settings.TEAM_STATS_EXCEL if excel is None else excel
+    report = PullReport()
+    paths = {stem: out_root / f"{stem}_{season}.csv" for stem in TABLES.values()}
+    if skip_existing and all(path.exists() for path in paths.values()):
+        report.skipped.extend(paths.values())
+        return report
+    try:
+        results = fetch_team_stats(season, fetch_page)
+    except RateLimited:
+        raise
+    except Exception as exc:  # reported; the next season still downloads
+        report.failed.append((f"bbref_team {season}", f"{type(exc).__name__}: {exc}"))
+        return report
+    out_root.mkdir(parents=True, exist_ok=True)
+    for stem, df in results.items():
+        df.to_csv(paths[stem], index=False)
+        report.written.append(paths[stem])
+        print(f"  saved {len(df):>2} teams -> {paths[stem]}")
+    if excel and results:
+        excel_dir.mkdir(parents=True, exist_ok=True)
+        book = excel_dir / f"team_stats_{season}.xlsx"
+        write_workbook(results, book)
+        print(f"  saved workbook  -> {book}")
+    return report
 
-    for i, season in enumerate(args.season):
+
+def pull_seasons(seasons: list[int], skip_existing: bool = False) -> PullReport:
+    """pull_team_tables for each season, settings.BBREF_DELAY_SECONDS apart."""
+    report = PullReport()
+    for i, season in enumerate(seasons):
         if i:
-            time.sleep(REQUEST_DELAY_SECONDS)
-        print(f"Fetching {SEASON_URL.format(season=season)}")
-        results = fetch_team_stats(season)
-
-        for stem, df in results.items():
-            path = args.out / f"{stem}_{season}.csv"
-            df.to_csv(path, index=False)
-            print(f"  saved {len(df):>2} teams -> {path}")
-
-        if not args.no_excel and results:
-            path = args.excel_out / f"team_stats_{season}.xlsx"
-            write_workbook(results, path)
-            print(f"  saved workbook  -> {path}")
-
-
-if __name__ == "__main__":
-    main()
+            time.sleep(settings.BBREF_DELAY_SECONDS)
+        print(f"Basketball-Reference team tables {season}:")
+        report.merge(pull_team_tables(season, skip_existing=skip_existing))
+    return report
