@@ -277,4 +277,5 @@ Menu → **2) Backfill seasons** → `2017-2025` → `playoffs`. This adds playo
 ## Future work (not in this spec)
 
 - **Cloud warehouse mirror.** MotherDuck's free plan (10 GB) fits the warehouse, and DuckDB reads SQLite directly. It would be a read-only mirror uploaded after builds, with an option to leave DARKO out. Revisit after the project is done, and check current free limits then.
+- **Possession-level play-by-play via pbpstats** (Darryl Blackport, https://github.com/dblackrun/pbpstats). This would be a new source that adds `fact_possession` and lineup stints: lineup ratings for any date range, possession-weighted on/off, and shot context. It replaces the README's deferred `PlayByPlayV3` pull (about 1,230 requests per season). Before starting, check that it works against current stats.nba.com play-by-play (V3), and check its license.
 - **`decision_score`.** Derive weights from the residual-model regressions instead of hand-picking them.
