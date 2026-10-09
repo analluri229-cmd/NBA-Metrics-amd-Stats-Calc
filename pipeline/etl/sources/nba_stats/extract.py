@@ -14,12 +14,13 @@ import re
 import time
 from pathlib import Path
 
+from pipeline import settings
+
 from ...canonical.dates import season_label
 from ...paths import RAW_DIR
 from ..pulling import PullReport, with_retries
 
 OUT_ROOT = RAW_DIR / "nba_stats"
-REQUEST_DELAY_SECONDS = 1.5
 SEASON_TYPES = {"regular": "Regular Season", "playoffs": "Playoffs"}
 
 _PLAYER_DASH = "leaguedashplayerstats.LeagueDashPlayerStats"
@@ -40,14 +41,17 @@ _PT_SHOT = "leaguedashplayerptshot.LeagueDashPlayerPtShot"
 _SHOT_CHART = "shotchartdetail.ShotChartDetail"
 _ON_OFF = "teamplayeronoffdetails.TeamPlayerOnOffDetails"
 
+# Fixed: describes what stats.nba.com offers; not a setting.
 OFFENSIVE_PLAY_TYPES = ("Isolation", "Transition", "PRBallHandler", "PRRollman", "Postup", "Spotup", "Handoff",
                         "Cut", "OffScreen", "OffRebound", "Misc")
 DEFENSIVE_PLAY_TYPES = ("Isolation", "PRBallHandler", "PRRollman", "Postup", "Spotup", "Handoff", "OffScreen")
 
 
+# Fixed: describes what stats.nba.com offers; not a setting.
 TRACKING_MEASURES = ("SpeedDistance", "Possessions", "Drives", "Passing", "CatchShoot", "PullUpShot", "Rebounding",
                      "PostTouch", "ElbowTouch", "PaintTouch", "Efficiency", "Defense")
 DEFENSE_CATEGORIES = (("overall", "Overall"), ("3pt", "3 Pointers"), ("rim", "Less Than 6Ft"))
+# Fixed: describes what stats.nba.com offers; not a setting.
 # Shooter-side tracking splits: distance of the closest defender x time left on the shot clock.
 # Each pair is one request; the seven shot clock ranges cover every shot, so summing over them
 # gives the defender-distance total.
@@ -188,9 +192,14 @@ def raw_path(season: int, data_type: str, season_type: str = "regular", out_root
 
 
 def pull_season(season: int, tables: list[str] | None = None, season_types: list[str] | None = None,
-                out_root: Path = OUT_ROOT, delay: float = REQUEST_DELAY_SECONDS, timeout: int = 60,
+                out_root: Path = OUT_ROOT, delay: float | None = None, timeout: int = 60,
                 skip_existing: bool = False, retries: int = 3) -> PullReport:
-    """Download each table; a table that keeps failing is reported and the pull continues."""
+    """Download each table; a table that keeps failing is reported and the pull continues.
+
+    ``tables`` defaults to settings.NBA_STATS_TABLES (empty = all); ``delay`` to settings.NBA_STATS_DELAY_SECONDS.
+    """
+    delay = settings.NBA_STATS_DELAY_SECONDS if delay is None else delay
+    tables = list(tables or settings.NBA_STATS_TABLES) or None
     unknown = set(tables or ()) - set(ALL_TABLES) - set(TEAM_REQUEST_TABLES)
     if unknown:
         raise ValueError(f"unknown nba_stats tables: {sorted(unknown)}")
@@ -238,9 +247,10 @@ def team_raw_path(season: int, table: str, team: str, season_type: str = "regula
 
 
 def pull_team_tables(season: int, tables: list[str] | None = None, season_types: list[str] | None = None,
-                     out_root: Path = OUT_ROOT, delay: float = REQUEST_DELAY_SECONDS, timeout: int = 120,
+                     out_root: Path = OUT_ROOT, delay: float | None = None, timeout: int = 120,
                      skip_existing: bool = False, retries: int = 3) -> PullReport:
     """One request per team for each table in ``TEAM_REQUEST_TABLES``."""
+    delay = settings.NBA_STATS_DELAY_SECONDS if delay is None else delay
     report = PullReport()
     requested = False
     for season_type in season_types or ["regular"]:

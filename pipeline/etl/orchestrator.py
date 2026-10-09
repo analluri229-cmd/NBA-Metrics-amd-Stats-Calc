@@ -22,6 +22,7 @@ import json
 from datetime import date
 from pathlib import Path
 
+from pipeline import settings
 from pipeline.etl.bootstrap import bootstrap
 from pipeline.etl.canonical.loader import refresh_dim_date_seasons
 from pipeline.etl.canonical.stat_catalog import refresh_stat_catalog
@@ -124,13 +125,14 @@ def _pull(args: argparse.Namespace) -> PullReport:
             report.merge(extract.pull_dates(days, skip_existing=args.skip_existing))
         for season in seasons:
             print(f"DARKO {season}:")
-            report.merge(extract.pull_season(season, every_days=args.every or 7, skip_existing=args.skip_existing))
+            report.merge(extract.pull_season(season, every_days=args.every, skip_existing=args.skip_existing))
     else:
         raise SystemExit(f"pull supports --source nba_stats, bbref or darko, not {args.source!r}")
     return report
 
 
-def main(argv: list[str] | None = None) -> int:
+def build_parser() -> argparse.ArgumentParser:
+    """The command-line interface; defaults come from pipeline/settings.py."""
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--db", type=Path, default=DB_PATH, help="Warehouse path. Default: %(default)s")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -143,18 +145,18 @@ def main(argv: list[str] | None = None) -> int:
     pull.add_argument("--season", nargs="*", default=[],
                       help="Season end year(s) or ranges: 2026 = 2025-26, 2017-2025 = nine seasons.")
     pull.add_argument("--tables", nargs="*", help="Only these tables (default: all for the source).")
-    pull.add_argument("--season-type", choices=["regular", "playoffs", "both"], default="regular",
-                      help="nba_stats: which season type to pull. Default: %(default)s")
+    pull.add_argument("--season-type", choices=list(settings.SEASON_TYPES), default=settings.SEASON_TYPE,
+                      help="nba_stats: which season type to pull. Default (settings.SEASON_TYPE): %(default)s")
     pull.add_argument("--playoffs", action="store_true", help="nba_stats: same as --season-type both.")
     pull.add_argument("--skip-existing", action="store_true",
                       help="Do not re-download files already in data/raw (resume an interrupted backfill).")
-    pull.add_argument("--with-web-scraper", action="store_true",
+    pull.add_argument("--with-web-scraper", action="store_true", default=settings.BBREF_WITH_WEB_SCRAPER,
                       help="bbref: also pull season totals, schedule and standings via basketball_reference_web_scraper.")
     pull.add_argument("--date", help="bbref: pull daily player box scores starting on this date (YYYY-MM-DD). "
                                      "darko: pull the ratings snapshot for this date.")
     pull.add_argument("--end", help="bbref, darko: last date for --date (inclusive).")
     pull.add_argument("--every", type=int,
-                      help="darko: days between snapshots. Default: 7 for --season (game dates only), 1 for --date.")
+                      help="darko: days between snapshots. Default: settings.DARKO_EVERY_DAYS for --season (game dates only), 1 for --date.")
 
     ing = commands.add_parser("ingest", help="Normalize raw files into the warehouse (offline).")
     ing.add_argument("--source", nargs="*", choices=[*ADAPTERS, *SOURCE_GROUPS])
@@ -170,7 +172,12 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--reset", action="store_true")
     run.add_argument("--force", action="store_true")
 
-    args = parser.parse_args(argv)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    settings.validate()
+    args = build_parser().parse_args(argv)
     if args.command == "bootstrap":
         print(bootstrap(args.db, reset=args.reset))
     elif args.command == "pull":

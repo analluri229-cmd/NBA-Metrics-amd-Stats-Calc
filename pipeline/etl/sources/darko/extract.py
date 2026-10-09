@@ -23,13 +23,14 @@ import time
 from datetime import date
 from pathlib import Path
 
+from pipeline import settings
+
 from ...paths import RAW_DIR
 from ..pulling import NotAvailable, PullReport, with_retries
 from .page_data import page_data, player_rows
 
 OUT_ROOT = RAW_DIR / "darko"
 # One maintainer's site: stay well under anything that looks like load.
-REQUEST_DELAY_SECONDS = 3
 SNAPSHOT_URL = "https://www.darko.app/__data.json?asof={date}"
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
 
@@ -65,9 +66,10 @@ def snapshot_dates(dates: list[str], every_days: int = 7, keep: tuple[str | None
     return sorted({*chosen, *(d for d in keep if d), *dates[-1:]})
 
 
-def pull_dates(dates: list[str], out_root: Path = OUT_ROOT, delay: float = REQUEST_DELAY_SECONDS,
+def pull_dates(dates: list[str], out_root: Path = OUT_ROOT, delay: float | None = None,
                skip_existing: bool = False, retries: int = 3) -> PullReport:
     """Save the DARKO snapshot for each date as dpm_<data date>.json under its season folder."""
+    delay = settings.DARKO_DELAY_SECONDS if delay is None else delay
     import requests
 
     from ...canonical.dates import season_from_date
@@ -117,10 +119,15 @@ def pull_dates(dates: list[str], out_root: Path = OUT_ROOT, delay: float = REQUE
     return report
 
 
-def pull_season(season: int, every_days: int = 7, raw_root: Path = RAW_DIR, out_root: Path = OUT_ROOT,
+def pull_season(season: int, every_days: int | None = None, raw_root: Path = RAW_DIR, out_root: Path = OUT_ROOT,
                 skip_existing: bool = False) -> PullReport:
     """Snapshots every ``every_days`` game days, plus the last regular-season and last playoff dates."""
-    dates, last_regular = game_dates(season, raw_root)
+    try:
+        dates, last_regular = game_dates(season, raw_root)
+    except FileNotFoundError:
+        return PullReport(failed=[(f"darko {season}",
+                                   f"no nba_stats team game logs for {season}; pull nba_stats for {season} first")])
+    every_days = settings.DARKO_EVERY_DAYS if every_days is None else every_days
     chosen = snapshot_dates(dates, every_days, keep=(last_regular,))
     print(f"  {len(chosen)} snapshot dates from {chosen[0]} to {chosen[-1]}")
     return pull_dates(chosen, out_root, skip_existing=skip_existing)

@@ -23,7 +23,7 @@ Output:
                                      definition, unit, basis, direction
     analysis/player_season_percentiles.csv
                                      every full-season stat with its league percentile among
-                                     qualified players (QUALIFY_MINUTES)
+                                     qualified players (settings.QUALIFY_MINUTES)
     analysis/team_season_ranks.csv   every team stat ranked 1-30 (1 = best when the stat has a
                                      direction, else 1 = highest)
 """
@@ -35,6 +35,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from pipeline import settings
 from pipeline.etl.canonical.schema import TABLES
 from pipeline.etl.paths import CLEAN_DIR, DB_PATH
 
@@ -45,7 +46,6 @@ EXPORT_TABLES = [*(t for t in TABLES if t not in WAREHOUSE_ONLY), "feature_playe
 SEASON_SCOPED_PREFIXES = ("fact_", "feature_")
 
 # Percentiles only rank players with enough minutes for the stat to mean something.
-QUALIFY_MINUTES = {"regular": 500, "playoffs": 100}
 MINUTES_STAT = {"basketball_reference": ("totals", "mp"), "nba_stats": ("totals", "min")}
 
 PLAYER_GAMES_SQL = """
@@ -183,7 +183,7 @@ def player_season_percentiles(conn: sqlite3.Connection, season: int | None = Non
         minutes.append(rows[["season", "season_type", "player_id", "source_system", "value"]])
     minutes = pd.concat(minutes).rename(columns={"value": "minutes"})
     long = long.merge(minutes, on=["season", "season_type", "player_id", "source_system"], how="inner")
-    long = long[long["minutes"] >= long["season_type"].map(QUALIFY_MINUTES)]
+    long = long[long["minutes"] >= long["season_type"].map(settings.QUALIFY_MINUTES)]
 
     group = long.groupby(["season", "season_type", "source_system", "stat_table", "stat_name"])["value"]
     long["qualified_players"] = group.transform("count")

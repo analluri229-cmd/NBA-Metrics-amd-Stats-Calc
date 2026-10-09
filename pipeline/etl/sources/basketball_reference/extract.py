@@ -1,7 +1,7 @@
 """Fetch raw Basketball-Reference files. Network only; parsing lives in the adapters.
 
 Basketball-Reference allows roughly 20 requests per minute, so every request is
-followed by ``REQUEST_DELAY_SECONDS``. A full season of player stat pages is 8
+followed by ``settings.BBREF_DELAY_SECONDS``. A full season of player stat pages is 8
 requests; ``pull_season`` adds 3 more via ``basketball_reference_web_scraper``.
 
 ``fetch_team_stats.py`` (team/opponent tables) is still run on its own.
@@ -12,12 +12,13 @@ import time
 from datetime import date, timedelta
 from pathlib import Path
 
+from pipeline import settings
+
 from ...paths import RAW_DIR
 from ..pulling import NotAvailable, PullReport, with_retries
 from .player_season import PLAYER_PAGES
 
 OUT_ROOT = RAW_DIR / "basketball_reference"
-REQUEST_DELAY_SECONDS = 4
 PAGE_URL = "https://www.basketball-reference.com/leagues/NBA_{season}_{page}.html"
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
 
@@ -33,13 +34,14 @@ class RateLimited(RuntimeError):
 
 
 def pull_player_tables(season: int, tables: list[str] | None = None, out_root: Path = OUT_ROOT,
-                       delay: float = REQUEST_DELAY_SECONDS, skip_existing: bool = False,
+                       delay: float | None = None, skip_existing: bool = False,
                        retries: int = 3) -> PullReport:
     """Save each league player stat page unmodified as player_<table>.html.
 
     A page that does not exist for the season (404) is reported as unavailable and
     skipped; other errors are retried, then reported; a 429 stops the pull.
     """
+    delay = settings.BBREF_DELAY_SECONDS if delay is None else delay
     import requests
 
     report = PullReport()
@@ -84,8 +86,9 @@ def pull_player_tables(season: int, tables: list[str] | None = None, out_root: P
     return report
 
 
-def pull_season(season: int, out_root: Path = OUT_ROOT, delay: float = REQUEST_DELAY_SECONDS) -> list[Path]:
+def pull_season(season: int, out_root: Path = OUT_ROOT, delay: float | None = None) -> list[Path]:
     """Season totals, schedule and standings through basketball_reference_web_scraper."""
+    delay = settings.BBREF_DELAY_SECONDS if delay is None else delay
     from basketball_reference_web_scraper import client
     from basketball_reference_web_scraper.data import OutputType
 
@@ -107,8 +110,9 @@ def pull_season(season: int, out_root: Path = OUT_ROOT, delay: float = REQUEST_D
 
 
 def pull_box_scores(start: date, end: date | None = None, out_root: Path = OUT_ROOT,
-                    delay: float = REQUEST_DELAY_SECONDS) -> list[Path]:
+                    delay: float | None = None) -> list[Path]:
     """Daily player box scores for each date in [start, end]."""
+    delay = settings.BBREF_DELAY_SECONDS if delay is None else delay
     from basketball_reference_web_scraper import client
     from basketball_reference_web_scraper.data import OutputType
 
