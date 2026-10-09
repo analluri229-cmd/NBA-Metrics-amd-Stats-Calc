@@ -142,7 +142,7 @@ This is the one file for values a person may change. Every entry has a comment c
 | Seasons | `CURRENT_SEASON` | `None` | `None` means the season containing today, switching over on **Nov 1**, which is after every normal tip-off. Set an end year to pin it. Labelled by end year: 2026 = 2025-26 |
 | | `SEASONS` | `range(2017, 2027)` | used as the backfill default |
 | | `SEASON_TYPE` | `"both"` | `"regular"`, `"playoffs"` or `"both"`. `"both"` doubles stats.nba.com requests (about 6 to 12 min per season) |
-| Sources | `DEFAULT_SOURCES` | `("nba_stats", "bbref", "bbref_team")` | DARKO is left out on purpose because its data is personal-use only |
+| Sources | `DEFAULT_SOURCES` | `("nba_stats", "bbref", "bbref_team", "darko")` | pulled in this order. DARKO must come after nba_stats, because its snapshot dates come from the nba_stats game logs. Validation rejects an order that puts `darko` before `nba_stats`. DARKO data is fine to use locally (warehouse, modeling, Tableau Desktop) but must not be published (Tableau Public, GitHub, shared files). darko.app has no terms page, so this is our conservative rule |
 | | `BBREF_WITH_WEB_SCRAPER` | `False` | adds totals, schedule and standings |
 | | `DARKO_EVERY_DAYS` | `7` | days between snapshots. `1` means about 190 requests per season |
 | | `NBA_STATS_TABLES` | `()` | empty means all tables. Otherwise a subset of the names in `nba_stats/extract.py` |
@@ -217,7 +217,7 @@ The "about N minutes" estimate is the number of requests still needed × the sou
 1) Update current season   pull DEFAULT_SOURCES for CURRENT_SEASON (SEASON_TYPE), then build
 2) Backfill seasons        asks: seasons, sources, season type
 3) Daily box scores        asks: start date, end date
-4) DARKO ratings           asks: seasons (warns: personal use only)
+4) DARKO ratings           asks: seasons; reminds: use locally, don't publish
 5) Rebuild warehouse       offline: ingest -> features
 6) Export CSVs             asks: latest / one season / all seasons
 q) Quit
@@ -257,7 +257,7 @@ Each deletion is confirmed by `git grep` and a full test run in the same commit.
 
 | Area | Test |
 |---|---|
-| settings | changing a setting changes the delay or threshold the extractor or exporter uses; `validate()` rejects each bad value with a message naming the setting |
+| settings | changing a setting changes the delay or threshold the extractor or exporter uses; `validate()` rejects each bad value with a message naming the setting, including `darko` listed before `nba_stats` |
 | `CURRENT_SEASON` | `None` gives 2026 for 2026-10-31 and 2027 for 2026-11-01; a pinned value wins |
 | `parse_seasons` | `2026` → [2026]; `2025-26` → [2026]; `2025-2026` → [2025, 2026]; `2017-2025` → 9 seasons; `2025-2017` → error; `2010-2012 2026` → 4 seasons |
 | prompts | scripted answers: bad then good, Enter takes the default, and y/n re-asks |
@@ -270,7 +270,7 @@ Each deletion is confirmed by `git grep` and a full test run in the same commit.
 
 ### After PR 2: playoff backfill
 
-Menu → **2) Backfill seasons** → `2017-2025` → `playoffs`. This adds playoff tables for 2016-17 through 2024-25: about 9 × 6 minutes on stats.nba.com, and existing files are skipped. Then rebuild. Basketball-Reference playoff tables already load from the existing pages. DARKO's last-playoff-date snapshots need the nba_stats playoff game logs first, so pull DARKO afterwards if it's wanted.
+Menu → **2) Backfill seasons** → `2017-2025` → `playoffs`. This adds playoff tables for 2016-17 through 2024-25: about 9 × 6 minutes on stats.nba.com, and existing files are skipped. Then rebuild. Basketball-Reference playoff tables already load from the existing pages. DARKO's last-playoff-date snapshots need the nba_stats playoff game logs first. Because DARKO comes after nba_stats in `DEFAULT_SOURCES`, a backfill with the default sources picks them up in the same run.
 
 ---
 
