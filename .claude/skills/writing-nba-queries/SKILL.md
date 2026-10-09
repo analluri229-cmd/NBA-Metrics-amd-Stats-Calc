@@ -9,7 +9,7 @@ For which table or stat to use, see exploring-nba-tables. This skill covers the 
 
 ## Where the file goes
 
-`local_analysis/<name>.py` (or `.ipynb`). It's git-ignored because the repo is a public portfolio; `scripts/` is only for pipeline code. Save charts and reports under `local_analysis/output/`.
+`local_analysis/<name>.py` (or `.ipynb`). It's git-ignored because the repo is a public portfolio; `pipeline/` is only for pipeline code. Save charts and reports under `local_analysis/output/`.
 
 ## Start from the template
 

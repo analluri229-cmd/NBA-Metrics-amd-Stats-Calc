@@ -27,28 +27,27 @@ This project is inspired by and relies on public basketball data sources and pri
   - DARKO data belongs to its authors; this project stores it for personal analysis only
 
 - Open-source basketball data tooling and reference projects blended into this workspace
-  - `basketball_reference_scraper/` — repository used for Basketball Reference extraction patterns and historical gathering utilities
-  - `basketball_reference_web_scraper/` — web-scraping workflows and season/table extraction logic
-  - `basketball/` — historical basketball data and source material used for broader reference work
-  - `dgrubis.github.io/` — older NBA Stats Web Data Connector integration and related data-access experimentation
-  - `nba-player-points-prediction/` — a separate analytics project used as a reference for player-focused analytical framing and scoring-style evaluation
-  - `third_party/` — location for additional external or supporting data-source projects and experiment code
+  - `vendor/basketball_reference_scraper/` — repository used for Basketball Reference extraction patterns and historical gathering utilities
+  - `vendor/basketball_reference_web_scraper/` — web-scraping workflows and season/table extraction logic
+  - `vendor/basketball/` — historical basketball data and source material used for broader reference work
+  - `vendor/dgrubis.github.io/` — older NBA Stats Web Data Connector integration and related data-access experimentation
+  - `vendor/nba-player-points-prediction/` — a separate analytics project used as a reference for player-focused analytical framing and scoring-style evaluation
+  - `vendor/nba_api/`, `vendor/flexviz/` — local reference clones of supporting projects (not committed)
 
 - Existing basketball analytics literature and metric frameworks
   - Player efficiency and valuation concepts from public basketball analytics work
-  - Custom metric ideas captured in `NBA_Player_Evaluation_Metrics.md` and `player_evaluation_metrics.md`
+  - Custom metric ideas captured in `docs/metrics/NBA_Player_Evaluation_Metrics.md` and `docs/metrics/player_evaluation_metrics.md`
 
 ## Repositories blended into this project
 
 The following repositories and project folders were incorporated as part of the broader build environment for this project:
 
-- `basketball_reference_scraper/`
-- `basketball_reference_web_scraper/`
-- `basketball/`
-- `dgrubis.github.io/`
-- `nba-player-points-prediction/`
-- `nba_analytics_pipeline/`
-- `third_party/`
+- `vendor/basketball_reference_scraper/`
+- `vendor/basketball_reference_web_scraper/`
+- `vendor/basketball/`
+- `vendor/dgrubis.github.io/`
+- `vendor/nba-player-points-prediction/`
+- `vendor/nba_api/` and `vendor/flexviz/` (local reference clones)
 
 These were used as reference material, analytical inspiration, extraction logic, and supporting source code in building the current pipeline. This project is a custom integration and extension of those ideas rather than an entirely new and isolated system.
 
@@ -71,11 +70,10 @@ If you use or build on this project:
 
 ## Notable source repositories in this workspace
 
-- `basketball_reference_scraper/` — Basketball Reference scraping tooling
-- `basketball_reference_web_scraper/` — web scraping utilities and data extraction helpers
-- `basketball/` — historical basketball data and source material
-- `dgrubis.github.io/` — older NBA Stats WDC integration and related work
-- `nba_analytics_pipeline/` — project-specific pipeline components
+- `vendor/basketball_reference_scraper/` — Basketball Reference scraping tooling
+- `vendor/basketball_reference_web_scraper/` — web scraping utilities and data extraction helpers
+- `vendor/basketball/` — historical basketball data and source material
+- `vendor/dgrubis.github.io/` — older NBA Stats WDC integration and related work
 
 ## Recommended citation
 

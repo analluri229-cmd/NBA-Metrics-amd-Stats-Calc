@@ -17,10 +17,10 @@ This project draws inspiration from and builds on the work of several public bas
 - Basketball Reference for historical player, team, and game context
 - stats.nba.com for official NBA statistical feeds and game data
 - the open-source basketball data ecosystem represented by the repos in this workspace
-- the historical NBA Stats Web Data Connector work in [dgrubis.github.io](dgrubis.github.io)
-- the extraction and scraping workflows in [basketball_reference_scraper](basketball_reference_scraper) and [basketball_reference_web_scraper](basketball_reference_web_scraper)
-- broader reference work in [basketball](basketball), [nba-player-points-prediction](nba-player-points-prediction), and [third_party](third_party)
-- the custom metric frameworks documented in [NBA_Player_Evaluation_Metrics.md](NBA_Player_Evaluation_Metrics.md) and [player_evaluation_metrics.md](player_evaluation_metrics.md)
+- the historical NBA Stats Web Data Connector work in [dgrubis.github.io](vendor/dgrubis.github.io)
+- the extraction and scraping workflows in [basketball_reference_scraper](vendor/basketball_reference_scraper) and [basketball_reference_web_scraper](vendor/basketball_reference_web_scraper)
+- broader reference work in [basketball](vendor/basketball), [nba-player-points-prediction](vendor/nba-player-points-prediction), and the reference clones in [vendor](vendor)
+- the custom metric frameworks documented in [NBA_Player_Evaluation_Metrics.md](docs/metrics/NBA_Player_Evaluation_Metrics.md) and [player_evaluation_metrics.md](docs/metrics/player_evaluation_metrics.md)
 
 This project is a custom integration and extension of those ideas rather than a standalone system built from scratch. A more detailed attribution and source history is available in [CREDITS.md](CREDITS.md).
 
@@ -37,7 +37,7 @@ This project is a custom integration and extension of those ideas rather than a 
 This workspace is set up to build a Python-based NBA analytics pipeline that blends:
 
 - Basketball Reference data
-- Live NBA Stats feeds through the `dgrubis.github.io` WDC integration
+- Live NBA Stats feeds through the `vendor/dgrubis.github.io` WDC integration
 - Historical sports data via `octonion/basketball`
 - Custom player and team metrics
 - Tableau-ready semantic models
@@ -58,16 +58,20 @@ This will ultimately feed Tableau semantic models, a warehouse, and downstream m
 
 ## Workspace Structure
 
-- `basketball_reference_scraper/` — installed Python package for Basketball Reference data extraction
-- `dgrubis.github.io/` — source repo for the older NBA Stats WDC
-- `basketball/` — historical data and scraping repo for backfill/reference work
-- `third_party/` — project-level location for external data-source repos
-- `data/raw/` — raw source snapshots and extracted files
-- `data/clean/` — normalized analysis tables
-- `db/sqlite/` — SQLite warehouse and model-ready tables
-- `scripts/etl/` — extraction, transformation, load, and feature-store scripts
-- `Semantic Models/` — Tableau semantic model work and exported assets
-- `.vscode/` — Python workspace settings and debugging config
+- `pipeline/` — this project's code
+  - `etl/` — extractors, adapters, loader, features and exports (`python -m pipeline.etl.orchestrator`)
+  - `tests/` — offline tests and their fixtures (`python -m pytest`)
+  - `fetch_team_stats.py`, `start_nba_sources.py` — standalone helpers
+- `data/` — everything the pipeline reads and writes
+  - `raw/` — unmodified downloads
+  - `clean/` — CSV exports for notebooks and Tableau
+  - `reference/` — hand-maintained overrides such as player id fixes
+  - `tableau/` — Tableau-ready workbooks
+  - `warehouse/` — the SQLite warehouse (git-ignored)
+- `docs/` — metric write-ups (`metrics/`), the workspace guide (`guides/`), design specs and plans (`superpowers/`)
+- `vendor/` — other projects: the five git submodules (Basketball-Reference scrapers, the NBA Stats WDC, `basketball`, `nba-player-points-prediction`) and the git-ignored `nba_api` and `flexviz` reference clones
+- `local_analysis/` — personal scripts and notebooks (git-ignored)
+- `.claude/skills/` — Claude Code skills for pulling data, exploring tables and writing queries
 
 ## Multi-source architecture
 
@@ -76,7 +80,7 @@ Each source has an **extractor**, which downloads raw files and is the only code
 ```
 extractor (network) --> data/raw/<source>/<season>/...  (unmodified downloads)
 adapter   (pure)    --> canonical rows + unresolved names
-loader              --> db/sqlite/nba_analytics.db  (one transaction + source_manifest row per file)
+loader              --> data/warehouse/nba_analytics.db  (one transaction + source_manifest row per file)
 features / export   --> feature_player_daily, data/clean/*.csv
 ```
 
@@ -84,7 +88,7 @@ features / export   --> feature_player_daily, data/clean/*.csv
 |---|---|---|---|
 | stats.nba.com via `nba_api` (primary) | `nba_stats` | `data/raw/nba_stats/<season>/*.json`, plus per-team files in `shot_chart/` and `on_off/` | player season stats (totals, per game, per 36, per 100, advanced, scoring, misc, usage, shot zones, shot distance), tracking (12 tables), closest-defender shooting (defender side), **shooting by closest-defender distance × shot clock** (shooter side, 28 bins), hustle, clutch, Synergy play types (11 offensive, 7 defensive), player bio, player and team game logs, team season stats, lineups, **every field goal attempt** (shot chart), **team stats with each player on and off the court** |
 | Basketball-Reference league pages | `bbref_player_season` | `data/raw/basketball_reference/<season>/player_*.html` | player totals, per game, per 36, per 100, advanced, **play-by-play**, shooting, **adjusted shooting** (play-by-play and adjusted shooting exist only here) |
-| `fetch_team_stats.py` | `bbref_team_season` | `data/raw/{team,opponent}_{totals,per_100_poss}_<season>.csv` | team/opponent season boxes, ratings, playoff flag |
+| `pipeline/fetch_team_stats.py` | `bbref_team_season` | `data/raw/{team,opponent}_{totals,per_100_poss}_<season>.csv` | team/opponent season boxes, ratings, playoff flag |
 | `basketball_reference_web_scraper` | `bbref_web` | `data/raw/basketball_reference/<season>/{players_season_totals,standings,season_schedule,player_box_scores_<date>}.csv` | season totals, standings, schedule/results, daily box scores |
 | DARKO (www.darko.app) | `darko` | `data/raw/darko/<season>/dpm_<date>.json` | dated player ratings: DPM, offensive/defensive/box/on-off DPM, projected minutes, pace and shooting, salary value |
 | Sample files | `legacy_sample` | `data/raw/historical/*.csv`, `data/raw/nba_stats/*.json` | demo player games |
@@ -93,7 +97,7 @@ The existing scrapers still work on their own for ad hoc pulls. The pipeline sim
 
 ### Canonical ids
 
-- `team_id` is the NBA abbreviation (`GSW`, `BKN`, `PHX`, `CHA`). Basketball-Reference codes (`BRK`, `CHO`, `PHO`) and historical franchise names are aliases. See `scripts/etl/canonical/teams.py`.
+- `team_id` is the NBA abbreviation (`GSW`, `BKN`, `PHX`, `CHA`). Basketball-Reference codes (`BRK`, `CHO`, `PHO`) and historical franchise names are aliases. See `pipeline/etl/canonical/teams.py`.
 - `player_id` is the Basketball-Reference slug (`jokicni01`). Other sources match by normalized name, disambiguated by team and season.
   - Players that can't be matched get a fallback id (`nba_<person id>`) and a row in `unresolved_entity` for review.
   - Fix them in `data/reference/player_xref_overrides.csv`, then run `ingest --force`.
@@ -102,7 +106,7 @@ The existing scrapers still work on their own for ad hoc pulls. The pipeline sim
 - In player season stats, `split = 'TOT'` is the full-season line. Traded players also get one row per team where the source provides it (Basketball-Reference tables, Synergy play types).
   - Synergy lists traded players only per team. The pipeline rebuilds their `TOT` row exactly from the team rows. The Synergy percentile and frequency can't be recombined, so they are left empty.
 
-### Warehouse tables (`scripts/etl/canonical/schema.py`)
+### Warehouse tables (`pipeline/etl/canonical/schema.py`)
 
 | Table | Grain |
 |---|---|
@@ -141,18 +145,18 @@ The existing scrapers still work on their own for ad hoc pulls. The pipeline sim
 
 ```
 # Download (network). --skip-existing resumes an interrupted pull; failures are listed at the end.
-python -m scripts.etl.orchestrator pull --source nba_stats --season 2026 [--season-type regular|playoffs|both]
-python -m scripts.etl.orchestrator pull --source nba_stats --season 2017-2025 --skip-existing   # backfill
-python -m scripts.etl.orchestrator pull --source bbref --season 2017-2025 --skip-existing       # 8 pages/season
-python -m scripts.etl.orchestrator pull --source bbref --with-web-scraper --season 2026         # + totals/schedule/standings
-python -m scripts.etl.orchestrator pull --source bbref --date 2025-11-01 --end 2025-11-07       # daily box scores
-python fetch_team_stats.py --season 2024 2025 2026 --no-excel                                    # team/opponent tables
-python -m scripts.etl.orchestrator pull --source darko --season 2017-2026 [--every 1]          # DARKO, after nba_stats
+python -m pipeline.etl.orchestrator pull --source nba_stats --season 2026 [--season-type regular|playoffs|both]
+python -m pipeline.etl.orchestrator pull --source nba_stats --season 2017-2025 --skip-existing   # backfill
+python -m pipeline.etl.orchestrator pull --source bbref --season 2017-2025 --skip-existing       # 8 pages/season
+python -m pipeline.etl.orchestrator pull --source bbref --with-web-scraper --season 2026         # + totals/schedule/standings
+python -m pipeline.etl.orchestrator pull --source bbref --date 2025-11-01 --end 2025-11-07       # daily box scores
+python -m pipeline.fetch_team_stats --season 2024 2025 2026 --no-excel                                    # team/opponent tables
+python -m pipeline.etl.orchestrator pull --source darko --season 2017-2026 [--every 1]          # DARKO, after nba_stats
 
 # Build (offline)
-python -m scripts.etl.orchestrator run [--reset]      # bootstrap -> ingest -> features -> export
-python -m scripts.etl.orchestrator ingest --source nba_stats --season 2026 [--force]
-python -m scripts.etl.orchestrator export [--season 2020 | --all-seasons]
+python -m pipeline.etl.orchestrator run [--reset]      # bootstrap -> ingest -> features -> export
+python -m pipeline.etl.orchestrator ingest --source nba_stats --season 2026 [--force]
+python -m pipeline.etl.orchestrator export [--season 2020 | --all-seasons]
 ```
 
 Costs per season:
@@ -169,7 +173,7 @@ Exports cover the **latest season** by default, written to `data/clean/`:
 - `--season N` writes that season to `data/clean/season_N/`.
 - `--all-seasons` writes every season to `data/clean/`.
 - Dimensions, crosswalks, the stat dictionary and the manifest are always complete.
-- The long `fact_player_season_stat` table is not exported, because the wide `player_season/` files hold the same values. Query it in `db/sqlite/nba_analytics.db` for multi-season work.
+- The long `fact_player_season_stat` table is not exported, because the wide `player_season/` files hold the same values. Query it in `data/warehouse/nba_analytics.db` for multi-season work.
 
 ### Reading the stats (exports in `data/clean/`)
 
@@ -190,9 +194,9 @@ Exports cover the **latest season** by default, written to `data/clean/`:
 ### Adding a new source adapter
 
 1. Write an extractor that saves unmodified responses under `data/raw/<source>/<season>/`.
-2. Write an adapter class with `source_name`, `source_system`, `discover(raw_root)` and `parse(raw, resolver)`. Return rows keyed by canonical table (see `scripts/etl/canonical/contract.py`). Resolve teams and players through `resolver`.
-3. Register it in `scripts/etl/sources/registry.py`. If it competes with existing sources, add its `source_system` to `SOURCE_PRECEDENCE`.
-4. Add a trimmed real file to `scripts/tests/fixtures/raw/` and a parse test.
+2. Write an adapter class with `source_name`, `source_system`, `discover(raw_root)` and `parse(raw, resolver)`. Return rows keyed by canonical table (see `pipeline/etl/canonical/contract.py`). Resolve teams and players through `resolver`.
+3. Register it in `pipeline/etl/sources/registry.py`. If it competes with existing sources, add its `source_system` to `SOURCE_PRECEDENCE`.
+4. Add a trimmed real file to `pipeline/tests/fixtures/raw/` and a parse test.
 
 ## Season coverage and data sourcing
 
@@ -206,7 +210,7 @@ Exports cover the **latest season** by default, written to `data/clean/`:
 2. Build an interpretation layer on top of `dim_stat` and the percentile export: player profile pages or dashboards, and comparisons against position peers.
 3. Add an adapter for the headerless `basketball/bbref/csv` game logs (1983-2015).
 4. Merge `team_box_scores` into `fact_team_game`; add Parquet export.
-5. Model training on `feature_player_daily` (`scripts/model/`).
+5. Model training on `feature_player_daily` (`pipeline/model/`).
 
 ## Notes
 

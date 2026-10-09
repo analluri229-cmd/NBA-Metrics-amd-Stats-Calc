@@ -69,19 +69,18 @@
       <div class="grid">
         <div class="card">
           <h3>1. Bootstrap the warehouse</h3>
-          <p><a href="bootstrap.cmd" class="action-link">Run bootstrap</a></p>
-          <code>py -3 -m scripts.etl.bootstrap</code>
+          <p><a href="../../bootstrap.cmd" class="action-link">Run bootstrap</a></p>
+          <code>py -3 -m pipeline.etl.bootstrap</code>
         </div>
         <div class="card">
           <h3>2. Run the demo sample pipeline</h3>
-          <p><a href="demo_pipeline.cmd" class="action-link">Run demo pipeline</a></p>
-          <code>py -3 -m scripts.etl.run_demo_pipeline</code>
+          <p><a href="../../demo_pipeline.cmd" class="action-link">Run demo pipeline</a></p>
+          <code>py -3 -m pipeline.etl.run_demo_pipeline</code>
         </div>
         <div class="card">
           <h3>3. Open the project docs</h3>
-          <p><a href="README.md">README.md</a></p>
-          <p><a href="IMPLEMENTATION_PLAN.md">IMPLEMENTATION_PLAN.md</a></p>
-        </div>
+          <p><a href="../../README.md">README.md</a></p>
+                  </div>
       </div>
     </div>
 
@@ -91,31 +90,30 @@
         <div class="card">
           <h3>Project source</h3>
           <ul>
-            <li><a href="README.md">README.md</a></li>
-            <li><a href="IMPLEMENTATION_PLAN.md">IMPLEMENTATION_PLAN.md</a></li>
-            <li><a href="workspace_guide.html">workspace_guide.html</a></li>
+            <li><a href="../../README.md">README.md</a></li>
+                        <li><a href="workspace_guide.html">workspace_guide.html</a></li>
           </ul>
         </div>
         <div class="card">
           <h3>ETL and warehouse</h3>
           <ul>
-            <li><a href="scripts/etl/warehouse.py">scripts/etl/warehouse.py</a></li>
-            <li><a href="scripts/etl/canonical_mapping.py">scripts/etl/canonical_mapping.py</a></li>
-            <li><a href="scripts/etl/run_demo_pipeline.py">scripts/etl/run_demo_pipeline.py</a></li>
+            <li><a href="../../pipeline/etl/warehouse.py">pipeline/etl/warehouse.py</a></li>
+            <li><a href="../../pipeline/etl/canonical_mapping.py">pipeline/etl/canonical_mapping.py</a></li>
+            <li><a href="../../pipeline/etl/run_demo_pipeline.py">pipeline/etl/run_demo_pipeline.py</a></li>
           </ul>
         </div>
         <div class="card">
           <h3>Data inputs</h3>
           <ul>
-            <li><a href="data/raw/historical/sample_player_game.csv">data/raw/historical/sample_player_game.csv</a></li>
-            <li><a href="data/raw/nba_stats/sample_live_players.json">data/raw/nba_stats/sample_live_players.json</a></li>
+            <li><a href="../../data/raw/historical/sample_player_game.csv">data/raw/historical/sample_player_game.csv</a></li>
+            <li><a href="../../data/raw/nba_stats/sample_live_players.json">data/raw/nba_stats/sample_live_players.json</a></li>
           </ul>
         </div>
         <div class="card">
           <h3>External data sources</h3>
           <ul>
-            <li><a href="dgrubis.github.io/">dgrubis.github.io</a></li>
-            <li><a href="basketball/">basketball</a></li>
+            <li><a href="../../vendor/dgrubis.github.io/">vendor/dgrubis.github.io</a></li>
+            <li><a href="../../vendor/basketball/">vendor/basketball</a></li>
           </ul>
         </div>
       </div>

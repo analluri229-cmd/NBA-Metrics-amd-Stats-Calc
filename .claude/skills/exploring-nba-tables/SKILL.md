@@ -7,7 +7,7 @@ description: Use when looking up or exploring player, team, game, or shot statis
 
 ## Two places the data lives
 
-| | `data/clean/` CSVs | `db/sqlite/nba_analytics.db` |
+| | `data/clean/` CSVs | `data/warehouse/nba_analytics.db` |
 |---|---|---|
 | Seasons | **Latest season only (2026)** by default | **All loaded seasons, 2017-2026** |
 | Shape | Wide: one column per stat | Long: one row per stat (`stat_name`, `value`) |
@@ -49,7 +49,7 @@ The long table has no stat columns - filter on `stat_name`, then pivot:
 
 ```python
 import sqlite3, pandas as pd
-con = sqlite3.connect("db/sqlite/nba_analytics.db")
+con = sqlite3.connect("data/warehouse/nba_analytics.db")
 df = pd.read_sql("""
     SELECT season, stat_name, value FROM fact_player_season_stat
     WHERE player_id = ? AND source_system = 'basketball_reference' AND stat_table = 'shooting'
@@ -92,6 +92,6 @@ Each breaks shots down a different way (distance bands, court zones, point share
 
 - Games: `data/clean/analysis/player_games.csv` (names joined), `fact_player_game`, `fact_team_game`
 - Teams: `data/clean/analysis/team_seasons.csv`, `fact_team_season_box`
-- Full column list: `scripts/etl/canonical/schema.py`
+- Full column list: `pipeline/etl/canonical/schema.py`
 
 Run from the project root, or the relative paths above won't resolve.

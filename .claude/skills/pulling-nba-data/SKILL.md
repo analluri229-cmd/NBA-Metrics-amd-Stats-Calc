@@ -11,15 +11,15 @@ Downloading alone changes nothing you can query. Every pull is followed by inges
 
 ```
 pull    (network)  -> data/raw/<source>/<season>/     unmodified downloads
-ingest  (offline)  -> db/sqlite/nba_analytics.db      normalized warehouse
+ingest  (offline)  -> data/warehouse/nba_analytics.db      normalized warehouse
 export  (offline)  -> data/clean/*.csv                latest season by default
 ```
 
-`python -m scripts.etl.orchestrator run` does bootstrap (creates tables if missing) -> ingest (every source, every season) -> features -> export (latest season). `run --force` reloads every file.
+`python -m pipeline.etl.orchestrator run` does bootstrap (creates tables if missing) -> ingest (every source, every season) -> features -> export (latest season). `run --force` reloads every file.
 Run everything from the project root with the project's venv active.
 
 Which seasons are already loaded:
-`python -c "import sqlite3; print(sqlite3.connect('db/sqlite/nba_analytics.db').execute('select distinct season from fact_player_season_stat').fetchall())"`
+`python -c "import sqlite3; print(sqlite3.connect('data/warehouse/nba_analytics.db').execute('select distinct season from fact_player_season_stat').fetchall())"`
 
 ## Common jobs
 
@@ -30,12 +30,12 @@ Which seasons are already loaded:
 | Backfill older seasons | `pull --source nba_stats --season 2017-2025 --skip-existing`, same for `bbref`, then `run` |
 | Only some tables | add `--tables advanced shot_zones` |
 | Daily box scores (BBRef) | `pull --source bbref --date 2025-11-01 --end 2025-11-07` then `run` |
-| Team/opponent CSVs | `python fetch_team_stats.py --season 2024 2025 2026 --no-excel` then `run` |
+| Team/opponent CSVs | `python -m pipeline.fetch_team_stats --season 2024 2025 2026 --no-excel` then `run` |
 | Totals, standings, schedule | `pull --source bbref --with-web-scraper --season 2026` then `run` |
 | DARKO ratings | `pull --source darko --season 2026` **after** the nba_stats pull for that season (it reads game dates from `data/raw/nba_stats/<season>/team_game_log.json`; no ingest needed in between) |
 | CSVs for an older season | `export --season 2020` (writes `data/clean/season_2020/`) or `export --all-seasons` |
 
-All `pull`/`ingest`/`export`/`run` commands are `python -m scripts.etl.orchestrator <command> ...`. `--season` takes end years: `2026` = 2025-26; ranges like `2017-2025` work for `pull`.
+All `pull`/`ingest`/`export`/`run` commands are `python -m pipeline.etl.orchestrator <command> ...`. `--season` takes end years: `2026` = 2025-26; ranges like `2017-2025` work for `pull`.
 
 ## Things that go wrong
 

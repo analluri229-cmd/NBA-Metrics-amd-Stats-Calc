@@ -16,11 +16,11 @@ venv/
 # Test cache
 .pytest_cache/
 
-# Generated data (rebuild with: python -m scripts.etl.orchestrator run)
+# Generated data (rebuild with: python -m pipeline.etl.orchestrator run)
 data/warehouse/*.db
 data/clean/
 
-# Raw per-season downloads (re-fetch with: python -m scripts.etl.orchestrator pull ...)
+# Raw per-season downloads (re-fetch with: python -m pipeline.etl.orchestrator pull ...)
 # The small sample files, data/reference/ overrides and test fixtures stay tracked.
 data/raw/basketball_reference/
 data/raw/nba_stats/[0-9][0-9][0-9][0-9]/

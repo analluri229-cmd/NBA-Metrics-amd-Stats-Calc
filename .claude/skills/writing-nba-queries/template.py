@@ -12,7 +12,10 @@ from pathlib import Path
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-DB = ROOT / "db" / "sqlite" / "nba_analytics.db"
+sys.path.insert(0, str(ROOT))  # so "pipeline" imports when run from local_analysis/
+
+from pipeline.etl.paths import DB_PATH as DB  # noqa: E402
+
 OUT = ROOT / "local_analysis" / "output"
 
 # column name -> (source_system, stat_table, stat_name); look names up in data/clean/dim_stat.csv
