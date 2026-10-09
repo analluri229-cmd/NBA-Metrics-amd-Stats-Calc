@@ -1,9 +1,9 @@
-"""Shared filesystem locations for the ETL layer."""
+"""Shared filesystem locations for the ETL layer. The folders are set in pipeline/settings.py."""
 from __future__ import annotations
 
-from pathlib import Path
+from pipeline import settings
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DB_PATH = PROJECT_ROOT / "data" / "warehouse" / "nba_analytics.db"
-RAW_DIR = PROJECT_ROOT / "data" / "raw"
-CLEAN_DIR = PROJECT_ROOT / "data" / "clean"
+PROJECT_ROOT = settings.PROJECT_ROOT
+DB_PATH = settings.WAREHOUSE_PATH
+RAW_DIR = settings.RAW_DIR
+CLEAN_DIR = settings.CLEAN_DIR
