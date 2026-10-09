@@ -67,3 +67,18 @@ def test_nba_pull_playoffs_only_writes_playoff_files(tmp_path, monkeypatch):
     monkeypatch.setattr(nba, "_endpoint", lambda path: _FakeEndpoint)
     report = nba.pull_season(2026, tables=["player_game_log"], season_types=["playoffs"], out_root=tmp_path, delay=0)
     assert [p.name for p in report.written] == ["player_game_log_playoffs.json"]
+
+
+@pytest.mark.parametrize("values, expected", [
+    (["2026"], [2026]), (["2025-26"], [2026]), (["2025-2026"], [2025, 2026]),
+    (["2017-2025"], list(range(2017, 2026))), (["2010-2012", "2026"], [2010, 2011, 2012, 2026]),
+    (["2010-2012,", "2025-26"], [2010, 2011, 2012, 2026]),
+])
+def test_parse_seasons_labels_and_ranges(values, expected):
+    assert parse_seasons(values) == expected
+
+
+@pytest.mark.parametrize("bad", [["2025-2017"], ["abc"], ["2025-7"]])
+def test_parse_seasons_rejects(bad):
+    with pytest.raises(ValueError):
+        parse_seasons(bad)

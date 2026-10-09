@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from datetime import date
 from pathlib import Path
 
@@ -84,11 +85,32 @@ def _print_summaries(summaries: list[dict]) -> None:
 
 
 def parse_seasons(values: list[str]) -> list[int]:
-    """['2017-2019', '2026'] -> [2017, 2018, 2019, 2026]."""
+    """Season end years from labels and ranges.
+
+    '2026' -> [2026]; '2025-26' (a season label) -> [2026]; '2017-2019' (a range of end years)
+    -> [2017, 2018, 2019]. Trailing commas are ignored. Raises ValueError on anything else.
+    """
     seasons: list[int] = []
     for value in values:
-        start, _, end = str(value).partition("-")
-        seasons.extend(range(int(start), int(end or start) + 1))
+        text = str(value).strip().rstrip(",").strip()
+        if not text:
+            continue
+        label = re.fullmatch(r"(\d{4})-(\d{2})", text)
+        span = re.fullmatch(r"(\d{4})-(\d{4})", text)
+        if label:
+            first, second = int(label[1]), int(label[2])
+            if second != (first + 1) % 100:
+                raise ValueError(f"{text!r}: a season label is like 2025-26 (the second year follows the first)")
+            seasons.append(first + 1)
+        elif span:
+            start, end = int(span[1]), int(span[2])
+            if end < start:
+                raise ValueError(f"{text!r}: put the earlier year first, like {end}-{start}")
+            seasons.extend(range(start, end + 1))
+        elif re.fullmatch(r"\d{4}", text):
+            seasons.append(int(text))
+        else:
+            raise ValueError(f"{text!r} is not a season: use 2026, 2025-26 or 2017-2025")
     return sorted(set(seasons))
 
 
