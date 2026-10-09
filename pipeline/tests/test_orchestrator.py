@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 
+from pipeline import settings
 from pipeline.etl.orchestrator import main, run_pipeline
 
 
@@ -18,7 +19,7 @@ def test_run_pipeline_returns_summary(tmp_path, raw_root) -> None:
 
 def test_run_pipeline_exports_notebook_files(tmp_path, raw_root) -> None:
     clean = tmp_path / "clean"
-    run_pipeline(tmp_path / "warehouse.db", raw_root=raw_root, export_dir=clean)
+    run_pipeline(tmp_path / "warehouse.db", raw_root=raw_root, export_dir=clean, export=True)
 
     for name in ("dim_stat.csv", "fact_player_game.csv", "analysis/player_games.csv",
                  "analysis/team_seasons.csv", "analysis/player_season_percentiles.csv",
@@ -65,7 +66,7 @@ def test_export_defaults_to_latest_season(tmp_path, raw_root) -> None:
 
 def test_team_and_lineup_exports(tmp_path, raw_root) -> None:
     clean = tmp_path / "clean"
-    run_pipeline(tmp_path / "warehouse.db", raw_root=raw_root, export_dir=clean)
+    run_pipeline(tmp_path / "warehouse.db", raw_root=raw_root, export_dir=clean, export=True)
     for name in ("team_season/nba_stats_hustle.csv", "team_season/nba_stats_advanced.csv",
                  "lineup_season/nba_stats_5man_advanced.csv", "analysis/team_season_ranks.csv"):
         assert (clean / name).exists(), name
@@ -76,3 +77,29 @@ def test_team_and_lineup_exports(tmp_path, raw_root) -> None:
     with (clean / "dim_stat.csv").open(encoding="utf-8") as handle:
         entities = {r["entity"] for r in csv.DictReader(handle)}
     assert entities == {"player", "team", "lineup"}
+
+
+def test_run_without_export_writes_nothing(tmp_path, raw_root, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "EXPORT_AFTER_RUN", False)
+    clean = tmp_path / "clean"
+    result = run_pipeline(tmp_path / "warehouse.db", raw_root=raw_root, export_dir=clean)
+
+    assert result["exports"] == 0
+    assert not clean.exists() or not any(clean.iterdir())
+
+
+def test_run_export_setting(tmp_path, raw_root, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "EXPORT_AFTER_RUN", True)
+    clean = tmp_path / "clean"
+    run_pipeline(tmp_path / "warehouse.db", raw_root=raw_root, export_dir=clean)
+
+    assert (clean / "dim_stat.csv").exists()
+
+
+def test_run_export_flag(tmp_path, raw_root, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "EXPORT_AFTER_RUN", False)
+    monkeypatch.setattr("pipeline.etl.orchestrator.RAW_DIR", raw_root)
+    monkeypatch.setattr("pipeline.etl.orchestrator.CLEAN_DIR", tmp_path / "clean")
+
+    assert main(["--db", str(tmp_path / "cli.db"), "run", "--export"]) == 0
+    assert (tmp_path / "clean" / "dim_stat.csv").exists()

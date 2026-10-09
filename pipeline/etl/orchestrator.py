@@ -11,7 +11,7 @@
     python -m pipeline.etl.orchestrator ingest [--source NAME ...] [--season N] [--force]
     python -m pipeline.etl.orchestrator features
     python -m pipeline.etl.orchestrator export [--season N | --all-seasons]   # default: latest season
-    python -m pipeline.etl.orchestrator run [--reset]        # bootstrap -> ingest -> features -> export
+    python -m pipeline.etl.orchestrator run [--reset] [--export]   # bootstrap -> ingest -> features [-> export]
 
 ``pull`` is the only step that touches the network; everything else works offline
 from the raw files in data/raw/.
@@ -51,11 +51,13 @@ def run_ingest(db_path: Path | str = DB_PATH, sources: list[str] | None = None, 
 
 
 def run_pipeline(db_path: Path | str = DB_PATH, raw_root: Path = RAW_DIR, export_dir: Path | str | None = None,
-                 reset: bool = False, force: bool = False) -> dict[str, object]:
+                 reset: bool = False, force: bool = False, export: bool | None = None) -> dict[str, object]:
+    """bootstrap -> ingest -> features, then export when ``export`` (default: settings.EXPORT_AFTER_RUN)."""
+    export = settings.EXPORT_AFTER_RUN if export is None else export
     bootstrap_result = bootstrap(db_path, reset=reset)
     summaries = run_ingest(db_path, force=force, raw_root=raw_root)
     features = generate_features(db_path)
-    exports = export_tables(db_path, export_dir or CLEAN_DIR)
+    exports = export_tables(db_path, export_dir or CLEAN_DIR) if export else []
     rows = rows_by_source(summaries)
     return {
         "warehouse": bootstrap_result["warehouse"],
@@ -195,9 +197,11 @@ def build_parser() -> argparse.ArgumentParser:
     exp.add_argument("--season", type=int, help="Export this season to data/clean/season_<N>/ (default: latest).")
     exp.add_argument("--all-seasons", action="store_true", help="Export every season to data/clean/.")
 
-    run = commands.add_parser("run", help="bootstrap -> ingest -> features -> export (offline).")
+    run = commands.add_parser("run", help="bootstrap -> ingest -> features [-> export] (offline).")
     run.add_argument("--reset", action="store_true")
     run.add_argument("--force", action="store_true")
+    run.add_argument("--export", action="store_const", const=True, default=None,
+                     help="Also export CSVs to data/clean/. Default: settings.EXPORT_AFTER_RUN.")
 
     return parser
 
@@ -223,7 +227,8 @@ def main(argv: list[str] | None = None) -> int:
         exports = export_tables(args.db, season=args.season, all_seasons=args.all_seasons)
         print(f"exported {len(exports)} files")
     elif args.command == "run":
-        result = run_pipeline(args.db, reset=args.reset, force=args.force)
+        result = run_pipeline(args.db, raw_root=RAW_DIR, export_dir=CLEAN_DIR, reset=args.reset, force=args.force,
+                              export=args.export)
         print(json.dumps({k: v for k, v in result.items() if k != "failed"}, indent=2))
         for failure in result["failed"]:
             print(f"FAILED {failure['file']}: {failure['error']}")
