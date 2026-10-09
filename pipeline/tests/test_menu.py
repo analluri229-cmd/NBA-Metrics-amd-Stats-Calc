@@ -162,3 +162,21 @@ def test_interactive_needs_console_in_and_out(monkeypatch, stdin, stdout, expect
     monkeypatch.setattr(menu.sys, "stdin", _Stream(stdin))
     monkeypatch.setattr(menu.sys, "stdout", _Stream(stdout))
     assert menu.interactive() is expected
+
+
+def test_failed_step_keeps_menu_running(raw):
+    def broken(argv):
+        raise PermissionError("team_stats_2026.xlsx is open in another program")
+    said = Said()
+
+    assert _run(answers("6", "1", "6", "3", "q"), broken, said) == 1
+
+    assert said.has("FAILED") and said.has("is open in another program")
+    assert sum("export" in line for line in said if line.startswith("->")) == 2
+
+
+def test_menu_ctrl_c_exits_cleanly(raw):
+    def interrupt(question):
+        raise KeyboardInterrupt
+    said = Said()
+    assert _run(interrupt, Recorder(), said) == 1 and said.has("Cancelled.")

@@ -69,8 +69,17 @@ class Menu:
         self.failed = False
 
     def command(self, argv: list[str]) -> int:
+        """Run one orchestrator command; a failure is reported and the menu carries on."""
         self.say("-> python -m pipeline.etl.orchestrator " + " ".join(argv))
-        code = self.run(argv)
+        try:
+            code = self.run(argv)
+        except (KeyboardInterrupt, EOFError):
+            raise
+        except SystemExit as exc:
+            code = exc.code if isinstance(exc.code, int) else 1
+        except Exception as exc:
+            self.say(f"FAILED: {type(exc).__name__}: {exc}")
+            code = 1
         self.failed |= bool(code)
         return code
 

@@ -73,3 +73,16 @@ def test_cli_pulls_each_season_with_bbref_delay(monkeypatch):
 
     assert orchestrator.main(["pull", "--source", "bbref_team", "--season", "2025-2026", "--skip-existing"]) == 0
     assert calls == [(2025, True), (2026, True)] and slept == [5]
+
+
+def test_team_pull_reports_locked_workbook(tmp_path, monkeypatch):
+    from pipeline.etl.sources.basketball_reference import team_extract
+
+    def locked(results, path):
+        raise PermissionError(f"[Errno 13] Permission denied: '{path}'")
+    monkeypatch.setattr(team_extract, "write_workbook", locked)
+
+    report = pull_team_tables(2026, out_root=tmp_path, excel_dir=tmp_path / "tableau", excel=True, fetch_page=_page)
+
+    assert {p.name for p in report.written} == NAMES
+    assert len(report.failed) == 1 and "close it" in report.failed[0][1]

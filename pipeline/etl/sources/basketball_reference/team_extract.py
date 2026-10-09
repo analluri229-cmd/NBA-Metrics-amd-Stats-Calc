@@ -156,8 +156,12 @@ def pull_team_tables(season: int, out_root: Path | None = None, excel_dir: Path 
     if excel and results:
         excel_dir.mkdir(parents=True, exist_ok=True)
         book = excel_dir / f"team_stats_{season}.xlsx"
-        write_workbook(results, book)
-        print(f"  saved workbook  -> {book}")
+        try:
+            write_workbook(results, book)
+            print(f"  saved workbook  -> {book}")
+        except PermissionError:
+            report.failed.append((f"bbref_team {season} workbook",
+                                  f"{book} is open in another program; close it and pull again"))
     return report
 
 

@@ -59,10 +59,11 @@ def test_cli_season_type_defaults_to_settings(monkeypatch):
     assert build_parser().parse_args(["pull", "--source", "nba_stats"]).season_type == "playoffs"
 
 
-def test_main_rejects_invalid_settings(monkeypatch):
+def test_main_rejects_invalid_settings(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "SEASON_TYPE", "x")
     with pytest.raises(settings.SettingsError):
-        main(["features"])
+        main(["--db", str(tmp_path / "never_built.db"), "features"])  # never the real warehouse
+    assert not (tmp_path / "never_built.db").exists()
 
 
 def test_darko_pull_without_game_logs_reports_failure(tmp_path):
