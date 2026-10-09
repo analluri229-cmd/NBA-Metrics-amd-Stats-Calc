@@ -61,7 +61,9 @@ This will ultimately feed Tableau semantic models, a warehouse, and downstream m
 - `pipeline/` — this project's code
   - `etl/` — extractors, adapters, loader, features and exports (`python -m pipeline.etl.orchestrator`)
   - `tests/` — offline tests and their fixtures (`python -m pytest`)
-  - `fetch_team_stats.py`, `start_nba_sources.py` — standalone helpers
+  - `settings.py` — every value you might change (seasons, sources, delays, exports), each with a comment
+  - `menu.py` — the guided menu behind `python -m pipeline` / `nba.cmd`
+  - `start_nba_sources.py` — launcher for the old NBA Stats WDC in `vendor/dgrubis.github.io`
 - `data/` — everything the pipeline reads and writes
   - `raw/` — unmodified downloads
   - `clean/` — CSV exports for notebooks and Tableau
@@ -88,7 +90,7 @@ features / export   --> feature_player_daily, data/clean/*.csv
 |---|---|---|---|
 | stats.nba.com via `nba_api` (primary) | `nba_stats` | `data/raw/nba_stats/<season>/*.json`, plus per-team files in `shot_chart/` and `on_off/` | player season stats (totals, per game, per 36, per 100, advanced, scoring, misc, usage, shot zones, shot distance), tracking (12 tables), closest-defender shooting (defender side), **shooting by closest-defender distance × shot clock** (shooter side, 28 bins), hustle, clutch, Synergy play types (11 offensive, 7 defensive), player bio, player and team game logs, team season stats, lineups, **every field goal attempt** (shot chart), **team stats with each player on and off the court** |
 | Basketball-Reference league pages | `bbref_player_season` | `data/raw/basketball_reference/<season>/player_*.html` | player totals, per game, per 36, per 100, advanced, **play-by-play**, shooting, **adjusted shooting** (play-by-play and adjusted shooting exist only here) |
-| `pipeline/fetch_team_stats.py` | `bbref_team_season` | `data/raw/{team,opponent}_{totals,per_100_poss}_<season>.csv` | team/opponent season boxes, ratings, playoff flag |
+| Basketball-Reference season pages (`pull --source bbref_team`) | `bbref_team_season` | `data/raw/{team,opponent}_{totals,per_100_poss}_<season>.csv` | team/opponent season boxes, ratings, playoff flag |
 | `basketball_reference_web_scraper` | `bbref_web` | `data/raw/basketball_reference/<season>/{players_season_totals,standings,season_schedule,player_box_scores_<date>}.csv` | season totals, standings, schedule/results, daily box scores |
 | DARKO (www.darko.app) | `darko` | `data/raw/darko/<season>/dpm_<date>.json` | dated player ratings: DPM, offensive/defensive/box/on-off DPM, projected minutes, pace and shooting, salary value |
 | Sample files | `legacy_sample` | `data/raw/historical/*.csv`, `data/raw/nba_stats/*.json` | demo player games |
@@ -143,6 +145,16 @@ The existing scrapers still work on their own for ad hoc pulls. The pipeline sim
 
 ## Running the pipeline
 
+The easiest way is the menu: double-click `nba.cmd`, or run
+
+```
+python -m pipeline
+```
+
+It asks what to do (update the current season, backfill seasons, box scores, DARKO, rebuild, export), checks what is already downloaded, and prints the equivalent command before running it. Defaults come from [`pipeline/settings.py`](pipeline/settings.py): seasons, regular/playoffs (default: both), which sources, request delays, whether to export CSVs. Change a value there to change the default; a command-line option overrides it for one run.
+
+The same steps from the command line:
+
 ```
 # Download (network). --skip-existing resumes an interrupted pull; failures are listed at the end.
 python -m pipeline.etl.orchestrator pull --source nba_stats --season 2026 [--season-type regular|playoffs|both]
@@ -150,11 +162,11 @@ python -m pipeline.etl.orchestrator pull --source nba_stats --season 2017-2025 -
 python -m pipeline.etl.orchestrator pull --source bbref --season 2017-2025 --skip-existing       # 8 pages/season
 python -m pipeline.etl.orchestrator pull --source bbref --with-web-scraper --season 2026         # + totals/schedule/standings
 python -m pipeline.etl.orchestrator pull --source bbref --date 2025-11-01 --end 2025-11-07       # daily box scores
-python -m pipeline.fetch_team_stats --season 2024 2025 2026 --no-excel                                    # team/opponent tables
+python -m pipeline.etl.orchestrator pull --source bbref_team --season 2024-2026                 # team/opponent tables (+ Tableau workbook)
 python -m pipeline.etl.orchestrator pull --source darko --season 2017-2026 [--every 1]          # DARKO, after nba_stats
 
 # Build (offline)
-python -m pipeline.etl.orchestrator run [--reset]      # bootstrap -> ingest -> features -> export
+python -m pipeline.etl.orchestrator run [--reset] [--export]   # bootstrap -> ingest -> features [-> CSV export]
 python -m pipeline.etl.orchestrator ingest --source nba_stats --season 2026 [--force]
 python -m pipeline.etl.orchestrator export [--season 2020 | --all-seasons]
 ```
@@ -167,9 +179,9 @@ Costs per season:
 - Basketball-Reference: 8 pages, rate-limited to 1 request every 4 seconds.
 - Missing pages are reported as unavailable and skipped. A Basketball-Reference HTTP 429 (rate limit) stops the pull, because the site then blocks for about an hour.
 
-`bootstrap.cmd` and `demo_pipeline.cmd` still work: `demo_pipeline.cmd` runs the offline `run` step. Only `pull` needs `requests`/`nba_api`; everything else needs just pandas (`requirements.txt`).
+`--season` takes end years (`2026`), season labels (`2025-26`) or ranges (`2017-2025`). Only `pull` needs `requests`/`nba_api`; everything else needs just pandas (`requirements.txt`).
 
-Exports cover the **latest season** by default, written to `data/clean/`:
+`run` exports CSVs only with `--export` or `EXPORT_AFTER_RUN = True` in `pipeline/settings.py`. Exports cover the **latest season** by default, written to `data/clean/`:
 - `--season N` writes that season to `data/clean/season_N/`.
 - `--all-seasons` writes every season to `data/clean/`.
 - Dimensions, crosswalks, the stat dictionary and the manifest are always complete.

@@ -14,7 +14,7 @@ description: Use when looking up or exploring player, team, game, or shot statis
 | Also has | - | `fact_shot` (x/y of every shot), `on_off`, `shot_context`, lineups |
 
 Any question spanning seasons -> warehouse. Loading a CSV and seeing only 2026 is expected, not missing data.
-Other exports: `export --season 2020` writes `data/clean/season_2020/`; `export --all-seasons` writes every season.
+`data/clean/` is written by `export` (or `run --export`); `run` alone doesn't refresh it. Other exports: `export --season 2020` writes `data/clean/season_2020/`; `export --all-seasons` writes every season.
 
 Seasons are labelled by end year: `2026` = 2025-26.
 

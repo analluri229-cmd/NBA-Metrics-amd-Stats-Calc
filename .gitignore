@@ -16,7 +16,7 @@ venv/
 # Test cache
 .pytest_cache/
 
-# Generated data (rebuild with: python -m pipeline.etl.orchestrator run)
+# Generated data (rebuild with: python -m pipeline.etl.orchestrator run --export)
 data/warehouse/*.db
 data/clean/
 

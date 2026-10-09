@@ -68,14 +68,14 @@
       <h2>Quick start</h2>
       <div class="grid">
         <div class="card">
-          <h3>1. Bootstrap the warehouse</h3>
-          <p><a href="../../bootstrap.cmd" class="action-link">Run bootstrap</a></p>
-          <code>py -3 -m pipeline.etl.bootstrap</code>
+          <h3>1. Open the menu</h3>
+          <p><a href="../../nba.cmd" class="action-link">Run nba.cmd</a></p>
+          <code>py -3 -m pipeline</code>
         </div>
         <div class="card">
-          <h3>2. Run the demo sample pipeline</h3>
-          <p><a href="../../demo_pipeline.cmd" class="action-link">Run demo pipeline</a></p>
-          <code>py -3 -m pipeline.etl.run_demo_pipeline</code>
+          <h3>2. Rebuild offline from raw files</h3>
+          <p>Menu option 5, or:</p>
+          <code>py -3 -m pipeline.etl.orchestrator run --export</code>
         </div>
         <div class="card">
           <h3>3. Open the project docs</h3>
@@ -99,7 +99,8 @@
           <ul>
             <li><a href="../../pipeline/etl/warehouse.py">pipeline/etl/warehouse.py</a></li>
             <li><a href="../../pipeline/etl/canonical_mapping.py">pipeline/etl/canonical_mapping.py</a></li>
-            <li><a href="../../pipeline/etl/run_demo_pipeline.py">pipeline/etl/run_demo_pipeline.py</a></li>
+            <li><a href="../../pipeline/settings.py">pipeline/settings.py</a></li>
+            <li><a href="adding-a-source.md">adding-a-source.md</a></li>
           </ul>
         </div>
         <div class="card">
