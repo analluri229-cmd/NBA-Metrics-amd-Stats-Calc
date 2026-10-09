@@ -193,6 +193,8 @@ Exports cover the **latest season** by default, written to `data/clean/`:
 
 ### Adding a new source adapter
 
+Start from the copyable template in `pipeline/etl/sources/_template/`; the step-by-step guide is [docs/guides/adding-a-source.md](docs/guides/adding-a-source.md). In short:
+
 1. Write an extractor that saves unmodified responses under `data/raw/<source>/<season>/`.
 2. Write an adapter class with `source_name`, `source_system`, `discover(raw_root)` and `parse(raw, resolver)`. Return rows keyed by canonical table (see `pipeline/etl/canonical/contract.py`). Resolve teams and players through `resolver`.
 3. Register it in `pipeline/etl/sources/registry.py`. If it competes with existing sources, add its `source_system` to `SOURCE_PRECEDENCE`.
